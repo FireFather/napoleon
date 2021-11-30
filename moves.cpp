@@ -3,31 +3,31 @@
 #include "piece.h"
 #include "position.h"
 
-uint64_t Moves::PawnAttacks[2][64];            
-uint64_t Moves::KingAttacks[64];              
-uint64_t Moves::KnightAttacks[64];            
+uint64_t Moves::pawnAttacks[2][64];            
+uint64_t Moves::kingAttacks[64];              
+uint64_t Moves::knightAttacks[64];            
 
 #ifdef PEXT
 uint64_t Moves::RookMask[64];                 
 #endif
 
-uint64_t Moves::RankAttacks[64][64];           
-uint64_t Moves::FileAttacks[64][64];           
+uint64_t Moves::rankAttacks[64][64];           
+uint64_t Moves::fileAttacks[64][64];           
 
-uint64_t Moves::A1H8DiagonalAttacks[64][64];    
-uint64_t Moves::H1A8DiagonalAttacks[64][64];    
-uint64_t Moves::PseudoRookAttacks[64];        
-uint64_t Moves::PseudoBishopAttacks[64];      
+uint64_t Moves::A1H8diagonalAttacks[64][64];    
+uint64_t Moves::H1A8diagonalAttacks[64][64];    
+uint64_t Moves::pseudoRookAttacks[64];        
+uint64_t Moves::pseudoBishopAttacks[64];      
 
-uint64_t Moves::ObstructedTable[64][64];
-uint64_t Moves::KingProximity[2][64];          
-uint64_t Moves::SideFiles[8];                 
-uint64_t Moves::FrontSpan[2][64];              
-uint64_t Moves::PasserSpan[2][64];            
+uint64_t Moves::obstructedTable[64][64];
+uint64_t Moves::kingProximity[2][64];          
+uint64_t Moves::adjacentFiles[8];                 
+uint64_t Moves::frontSpan[2][64];              
+uint64_t Moves::passerSpan[2][64];            
 
 int Moves::Distance[64][64];                   
 
-void Moves::InitAttacks()
+void Moves::initAttacks()
     {
     initPawnAttacks();
     initKnightAttacks();
@@ -41,92 +41,92 @@ void Moves::InitAttacks()
 
 #ifdef PEXT
     initRookAttacks();
-    for ( auto sq = 0; sq < 64; sq++ )
+    for (auto sq = 0; sq < 64; sq++)
         {
-        auto f = Square::GetFileIndex(sq);
-        auto r = Square::GetRankIndex(sq);
-        RookMask[sq] = Masks::SixBitRankMask[r] | Masks::SixBitFileMask[f];
+        auto f = Square::getFileIndex(sq);
+        auto r = Square::getRankIndex(sq);
+        RookMask[sq] = Masks::sixBitRankMask[r] | Masks::sixBitFileMask[f];
         }
 #endif
-    for ( auto sq1 = 0; sq1 < 64; sq1++ )
-        for ( auto sq2 = 0; sq2 < 64; sq2++ )
+    for (auto sq1 = 0; sq1 < 64; sq1++)
+        for (auto sq2 = 0; sq2 < 64; sq2++)
             Distance[sq1][sq2] = Square::Distance(sq1, sq2);
 
-    for ( auto sq = 0; sq < 64; sq++ )
+    for (auto sq = 0; sq < 64; sq++)
         {
-        uint64_t king_ring = King::GetKingAttacks(Masks::SquareMask[sq]);
-        KingProximity[PieceColor::White][sq] = king_ring | Direction::OneStepNorth(king_ring);
-        KingProximity[PieceColor::Black][sq] = king_ring | Direction::OneStepSouth(king_ring);
+        uint64_t king_ring = King::getKingAttacks(Masks::squareMask[sq]);
+        kingProximity[pieceColor::White][sq] = king_ring | Direction::oneStepNorth(king_ring);
+        kingProximity[pieceColor::Black][sq] = king_ring | Direction::oneStepSouth(king_ring);
         }
 
-    for ( uint8_t f = 0; f < 8; f++ )
+    for (uint8_t f = 0; f < 8; f++)
         {
-        uint64_t file = Masks::FileMask[f];
-        SideFiles[f] = Direction::OneStepWest(file);
-        SideFiles[f] |= Direction::OneStepEast(file);
+        uint64_t file = Masks::fileMask[f];
+        adjacentFiles[f] = Direction::oneStepWest(file);
+        adjacentFiles[f] |= Direction::oneStepEast(file);
         }
 
-    for ( auto sq = 0; sq < 64; sq++ )
+    for (auto sq = 0; sq < 64; sq++)
         {
-        uint64_t wspan = Masks::SquareMask[sq];
-        uint64_t bspan = Masks::SquareMask[sq];
+        uint64_t wspan = Masks::squareMask[sq];
+        uint64_t bspan = Masks::squareMask[sq];
 
         wspan |= wspan << 8;
         wspan |= wspan << 16;
         wspan |= wspan << 32;
-        wspan = Direction::OneStepNorth(wspan);
+        wspan = Direction::oneStepNorth(wspan);
 
         bspan |= bspan >> 8;
         bspan |= bspan >> 16;
         bspan |= bspan >> 32;
-        bspan = Direction::OneStepSouth(bspan);
+        bspan = Direction::oneStepSouth(bspan);
 
-        PasserSpan[PieceColor::White][sq] = FrontSpan[PieceColor::White][sq] = wspan;
-        PasserSpan[PieceColor::Black][sq] = FrontSpan[PieceColor::Black][sq] = bspan;
+        passerSpan[pieceColor::White][sq] = frontSpan[pieceColor::White][sq] = wspan;
+        passerSpan[pieceColor::Black][sq] = frontSpan[pieceColor::Black][sq] = bspan;
 
-        PasserSpan[PieceColor::White][sq] |= Direction::OneStepWest(wspan);
-        PasserSpan[PieceColor::White][sq] |= Direction::OneStepEast(wspan);
+        passerSpan[pieceColor::White][sq] |= Direction::oneStepWest(wspan);
+        passerSpan[pieceColor::White][sq] |= Direction::oneStepEast(wspan);
 
-        PasserSpan[PieceColor::Black][sq] |= Direction::OneStepWest(bspan);
-        PasserSpan[PieceColor::Black][sq] |= Direction::OneStepEast(bspan);
+        passerSpan[pieceColor::Black][sq] |= Direction::oneStepWest(bspan);
+        passerSpan[pieceColor::Black][sq] |= Direction::oneStepEast(bspan);
         }
     }
 
 void Moves::initPawnAttacks()
     {
-    for ( int sq = 0; sq < 64; sq++ )
+    for (int sq = 0; sq < 64; sq++)
         {
-        PawnAttacks[PieceColor::White][sq] =
-            Direction::OneStepNorthEast(Masks::SquareMask[sq]) | Direction::OneStepNorthWest(Masks::SquareMask[sq]);
-        PawnAttacks[PieceColor::Black][sq] =
-            Direction::OneStepSouthEast(Masks::SquareMask[sq]) | Direction::OneStepSouthWest(Masks::SquareMask[sq]);
+        pawnAttacks[pieceColor::White][sq] =
+            Direction::oneStepNorthEast(Masks::squareMask[sq]) | Direction::oneStepNorthWest(Masks::squareMask[sq]);
+        pawnAttacks[pieceColor::Black][sq] =
+            Direction::oneStepSouthEast(Masks::squareMask[sq]) | Direction::oneStepSouthWest(Masks::squareMask[sq]);
         }
     }
 
 void Moves::initKnightAttacks()
     {
-    for ( int sq = 0; sq < 64; sq++ )
+    for (int sq = 0; sq < 64; sq++)
         {
-        KnightAttacks[sq] = Knight::GetKnightAttacks(Masks::SquareMask[sq]);
+        knightAttacks[sq] = Knight::getKnightAttacks(Masks::squareMask[sq]);
         }
     }
 
 void Moves::initKingAttacks()
     {
-    for ( int sq = 0; sq < 64; sq++ )
+    for (int sq = 0; sq < 64; sq++)
         {
-        KingAttacks[sq] = King::GetKingAttacks(Masks::SquareMask[sq]);
+        kingAttacks[sq] = King::getKingAttacks(Masks::squareMask[sq]);
         }
     }
 
 void Moves::initRankAttacks()
     {
-    for ( int sq = 0; sq < 64; sq++ )
+    for (int sq = 0; sq < 64; sq++)
         {
-        for (uint64_t occ = 0; occ < 64; occ++ )
+        for (uint64_t occ = 0; occ < 64; occ++)
             {
-            int rank = Square::GetRankIndex(sq);
-            int file = Square::GetFileIndex(sq);
+            int rank = Square::getRankIndex(sq);
+            int file = Square::getFileIndex(sq);
 
             uint64_t occupancy = (occ << 1);
             uint64_t targets = Empty;
@@ -135,9 +135,9 @@ void Moves::initRankAttacks()
 
             while (blocker <= 7)
                 {
-                targets |= Masks::SquareMask[blocker];
+                targets |= Masks::squareMask[blocker];
 
-                if (IsBitSet(occupancy, blocker))
+                if (isBitSet(occupancy, blocker))
                     break;
 
                 blocker++;
@@ -147,58 +147,58 @@ void Moves::initRankAttacks()
 
             while (blocker >= 0)
                 {
-                targets |= Masks::SquareMask[blocker];
+                targets |= Masks::squareMask[blocker];
 
-                if (IsBitSet(occupancy, blocker))
+                if (isBitSet(occupancy, blocker))
                     break;
 
                 blocker--;
                 }
 
-            RankAttacks[sq][occ] = targets << (8 * rank);
+            rankAttacks[sq][occ] = targets << (8 * rank);
             }
         }
     }
 
 void Moves::initFileAttacks()
     {
-    for ( int sq = 0; sq < 64; sq++ )
+    for (int sq = 0; sq < 64; sq++)
         {
-        for ( int occ = 0; occ < 64; occ++ )
+        for (int occ = 0; occ < 64; occ++)
             {
             uint64_t targets = Empty;
-            uint64_t rankTargets = RankAttacks[7 - (sq / 8)][occ];         
+            uint64_t rankTargets = rankAttacks[7 - (sq / 8)][occ];         
 
-            for ( int bit = 0; bit < 8; bit++ )                           
+            for (int bit = 0; bit < 8; bit++)                           
                 {
                 int rank = 7 - bit;
-                int file = Square::GetFileIndex(sq);
+                int file = Square::getFileIndex(sq);
 
-                if (IsBitSet(rankTargets, bit))
+                if (isBitSet(rankTargets, bit))
                     {
-                    targets |= Masks::SquareMask[Square::GetSquareIndex(file, rank)];
+                    targets |= Masks::squareMask[Square::getSquareIndex(file, rank)];
                     }
                 }
-            FileAttacks[sq][occ] = targets;
+            fileAttacks[sq][occ] = targets;
             }
         }
     }
 
 void Moves::initDiagonalAttacks()
     {
-    for ( int sq = 0; sq < 64; sq++ )
+    for (int sq = 0; sq < 64; sq++)
         {
-        for ( int occ = 0; occ < 64; occ++ )
+        for (int occ = 0; occ < 64; occ++)
             {
-            int diag = Square::GetRankIndex(sq) - Square::GetFileIndex(sq);
+            int diag = Square::getRankIndex(sq) - Square::getFileIndex(sq);
             uint64_t targets = Empty;
-            uint64_t rankTargets = diag > 0 ? RankAttacks[sq % 8][occ] : RankAttacks[sq / 8][occ];
-            for ( int bit = 0; bit < 8; bit++ )        
+            uint64_t rankTargets = diag > 0 ? rankAttacks[sq % 8][occ] : rankAttacks[sq / 8][occ];
+            for (int bit = 0; bit < 8; bit++)        
                 {
                 int rank;
                 int file;
 
-                if (IsBitSet(rankTargets, bit))
+                if (isBitSet(rankTargets, bit))
                     {
                     if (diag >= 0)
                         {
@@ -213,32 +213,32 @@ void Moves::initDiagonalAttacks()
 
                     if ((file >= 0) && (file <= 7) && (rank >= 0) && (rank <= 7))
                         {
-                        targets |= Masks::SquareMask[Square::GetSquareIndex(file, rank)];
+                        targets |= Masks::squareMask[Square::getSquareIndex(file, rank)];
                         }
                     }
                 }
 
-            A1H8DiagonalAttacks[sq][occ] = targets;
+            A1H8diagonalAttacks[sq][occ] = targets;
             }
         }
     }
 
 void Moves::initAntiDiagonalAttacks()
     {
-    for ( int sq = 0; sq < 64; sq++ )
+    for (int sq = 0; sq < 64; sq++)
         {
-        for ( int occ = 0; occ < 64; occ++ )
+        for (int occ = 0; occ < 64; occ++)
             {
-            int diag = Square::GetH1A8AntiDiagonalIndex(sq);
+            int diag = Square::getH1A8AntiDiagonalIndex(sq);
 
             uint64_t targets = Empty;
-            uint64_t rankTargets = diag > 7 ? RankAttacks[7 - sq / 8][occ] : RankAttacks[sq % 8][occ];
-            for ( int bit = 0; bit < 8; bit++ )        
+            uint64_t rankTargets = diag > 7 ? rankAttacks[7 - sq / 8][occ] : rankAttacks[sq % 8][occ];
+            for (int bit = 0; bit < 8; bit++)        
                 {
                 int rank;
                 int file;
 
-                if (IsBitSet(rankTargets, bit))
+                if (isBitSet(rankTargets, bit))
                     {
                     if (diag >= 7)
                         {
@@ -253,40 +253,40 @@ void Moves::initAntiDiagonalAttacks()
 
                     if ((file >= 0) && (file <= 7) && (rank >= 0) && (rank <= 7))
                         {
-                        targets |= Masks::SquareMask[Square::GetSquareIndex(file, rank)];
+                        targets |= Masks::squareMask[Square::getSquareIndex(file, rank)];
                         }
                     }
                 }
 
-            H1A8DiagonalAttacks[sq][occ] = targets;
+            H1A8diagonalAttacks[sq][occ] = targets;
             }
         }
     }
 
 void Moves::initPseudoAttacks()
     {
-    for ( int i = 0; i < 64; i++ )
+    for (int i = 0; i < 64; i++)
         {
-        PseudoRookAttacks[i] = RankAttacks[i][0] | FileAttacks[i][0];
-        PseudoBishopAttacks[i] = A1H8DiagonalAttacks[i][0] | H1A8DiagonalAttacks[i][0];
+        pseudoRookAttacks[i] = rankAttacks[i][0] | fileAttacks[i][0];
+        pseudoBishopAttacks[i] = A1H8diagonalAttacks[i][0] | H1A8diagonalAttacks[i][0];
         }
     }
 
 void Moves::initObstructedTable()
     {
-    for ( int s1 = 0; s1 < 64; s1++ )
+    for (int s1 = 0; s1 < 64; s1++)
         {
-        for ( int s2 = 0; s2 < 64; s2++ )
+        for (int s2 = 0; s2 < 64; s2++)
             {
-            ObstructedTable[s1][s2] = 0;
+            obstructedTable[s1][s2] = 0;
 
-            if ((PseudoRookAttacks[s1] | PseudoBishopAttacks[s1]) & Masks::SquareMask[s2])
+            if ((pseudoRookAttacks[s1] | pseudoBishopAttacks[s1]) & Masks::squareMask[s2])
                 {
-                int delta = (s2 - s1) / std::max(abs(Square::GetFileIndex(s1) - Square::GetFileIndex(s2)),
-                    abs(Square::GetRankIndex(s1) - Square::GetRankIndex(s2)));
+                int delta = (s2 - s1) / std::max(abs(Square::getFileIndex(s1) - Square::getFileIndex(s2)),
+                    abs(Square::getRankIndex(s1) - Square::getRankIndex(s2)));
 
-                for ( int s = s1 + delta; s != s2; s += delta )
-                    ObstructedTable[s1][s2] |= Masks::SquareMask[s];
+                for (int s = s1 + delta; s != s2; s += delta)
+                    obstructedTable[s1][s2] |= Masks::squareMask[s];
                 }
             }
         }
@@ -297,12 +297,12 @@ uint64_t Moves::RookAttacks[64][64 * 64];
 
 void Moves::initRookAttacks()
     {
-    for ( auto sq = 0; sq < 64; sq++ )
+    for (auto sq = 0; sq < 64; sq++)
         {
-        auto f = Square::GetFileIndex(sq);
-        auto r = Square::GetRankIndex(sq);
+        auto f = Square::getFileIndex(sq);
+        auto r = Square::getRankIndex(sq);
 
-        for ( auto occ = 0; occ < 64*64; occ++ )
+        for (auto occ = 0; occ < 64*64; occ++)
             {
             int f_occ = 0, r_occ = 0;
             int word = occ;
@@ -353,7 +353,7 @@ void Moves::initRookAttacks()
                 f_occ |= word << f_bits;        
                 }
 
-            RookAttacks[sq][occ] = RankAttacks[sq][r_occ] | FileAttacks[sq][f_occ];
+            RookAttacks[sq][occ] = rankAttacks[sq][r_occ] | fileAttacks[sq][f_occ];
             }
         }
     }

@@ -1,8 +1,8 @@
 #include "movepick.h"
 
-MovePick::MovePick( Position &position, SearchInfo &info ) :
+MovePick::MovePick(Position &position, SearchInfo &info) :
     position(position),
-    hashMove(NullMove),
+    hashMove(nullMove),
     count(0),
     info(info),
     first(0)

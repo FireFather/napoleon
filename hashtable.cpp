@@ -3,34 +3,34 @@
 #include "searchinfo.h"
 #include <valarray>
 
-HashTable::HashTable( int mb ) noexcept
+hashTable::hashTable(int mb) noexcept
     {
-    SetSize(mb);
+    setSize(mb);
     }
 
-void HashTable::SetSize( int mb )
+void hashTable::setSize(int mb)
     {
     mb = int(std::pow(2, int(Math::Log2(mb))));
 
     entries = uint32_t((mb * std::pow(2, 20)) / sizeof(HashEntry));
-    lock_entries = (entries / BucketSize);
+    lockEntries = (entries / bucketSize);
 
     free(table);
     free(locks);
     table = (HashEntry *)std::calloc(entries * sizeof(HashEntry), 1);
-    locks = new SpinLock[lock_entries];
-    mask = entries - BucketSize;
+    locks = new SpinLock[lockEntries];
+    mask = entries - bucketSize;
     }
 
-void HashTable::Save( uint64_t key, uint8_t depth, int score, Move move, ScoreType bound )
+void hashTable::Save(uint64_t key, uint8_t depth, int score, Move move, ScoreType bound)
     {
-    auto mux = locks + (key & mask) / BucketSize;
+    auto mux = locks + (key & mask) / bucketSize;
     std::lock_guard<SpinLock> lock(*mux);
-    int min = MaxPly;
+    int min = maxPly;
     int index = 0;
     auto hash = at(key);
 
-    for ( auto i = 0; i < BucketSize; i++, hash++ )
+    for (auto i = 0; i < bucketSize; i++, hash++)
         {
         if (hash->Depth < min)
             {
@@ -50,14 +50,14 @@ void HashTable::Save( uint64_t key, uint8_t depth, int score, Move move, ScoreTy
         }
     }
 
-std::pair<int, Move> HashTable::Probe( uint64_t key, uint8_t depth, int alpha, int beta )
+std::pair<int, Move> hashTable::Probe(uint64_t key, uint8_t depth, int alpha, int beta)
     {
-    auto mux = locks + (key & mask) / BucketSize;
+    auto mux = locks + (key & mask) / bucketSize;
     std::lock_guard<SpinLock> lock(*mux);
     auto hash = at(key);
-    auto move = NullMove;
+    auto move = nullMove;
 
-    for ( auto i = 0; i < BucketSize; i++, hash++ )
+    for (auto i = 0; i < bucketSize; i++, hash++)
         {
         if (hash->Key == key)
             {
@@ -76,21 +76,21 @@ std::pair<int, Move> HashTable::Probe( uint64_t key, uint8_t depth, int alpha, i
     return std::make_pair(Unknown, move);
     }
 
-void HashTable::Clear()
+void hashTable::Clear()
     {
     std::memset(table, 0, entries*sizeof(HashEntry));
     }
 
-Move HashTable::GetPv( uint64_t key )
+Move hashTable::getPV(uint64_t key)
     {
     auto hash = at(key);
-    for ( auto i = 0; i < BucketSize; i++, hash++ )
+    for (auto i = 0; i < bucketSize; i++, hash++)
         {
         if (hash->Key == key)
             {
-            if (!hash->BestMove.IsNull())
+            if (!hash->BestMove.isNull())
                 return hash->BestMove;
             }
         }
-    return NullMove;
+    return nullMove;
     }

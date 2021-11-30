@@ -2,40 +2,25 @@
 #include "move.h"
 #include "position.h"
 
-bool Move::IsNull() const
-    {
-    return (FromSquare() == ToSquare());
-    }
-
-bool Move::IsCastleOO() const
-    {
-    return ((move >> 12) == KingCastle);
-    }
-
-bool Move::IsCastleOOO() const
-    {
-    return ((move >> 12) == QueenCastle);
-    }
-
-std::string Move::ToAlgebraic() const
+std::string Move::toAlgebraic() const
     {
     std::string algebraic;
 
-    if (IsNull())
+    if (isNull())
         return "(none)";      
 
-    if (IsCastle())
+    if (isCastle())
         {
-        if (IsCastleOO())
+        if (isCastleOO())
             {
-            if (FromSquare() == Square::E1)
+            if (fromSquare() == Square::E1)
                 algebraic += "e1g1";
             else
                 algebraic += "e8g8";
             }
-        else if (IsCastleOOO())
+        else if (isCastleOOO())
             {
-            if (FromSquare() == Square::E1)
+            if (fromSquare() == Square::E1)
                 algebraic += "e1c1";
             else
                 algebraic += "e8c8";
@@ -43,11 +28,11 @@ std::string Move::ToAlgebraic() const
         }
     else
         {
-        algebraic += Square::ToAlgebraic(FromSquare());
-        algebraic += Square::ToAlgebraic(ToSquare());
+        algebraic += Square::toAlgebraic(fromSquare());
+        algebraic += Square::toAlgebraic(toSquare());
 
-        if (IsPromotion())
-            algebraic += Piece::GetType(PiecePromoted());
+        if (isPromotion())
+            algebraic += Piece::getType(piecePromoted());
         }
     return algebraic;
     }

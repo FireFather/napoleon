@@ -9,15 +9,15 @@ static int pieceHere = 0;
 class Fen
     {
     public:
-    std::string FullString;
-    PieceInfo PiecePlacement[64];
+    std::string fullString;
+    pieceInfo piecePlacement[64];
     uint8_t sideToMove;
-    bool WhiteCanCastleShort;
-    bool WhiteCanCastleLong;
-    bool BlackCanCastleShort;
-    bool BlackCanCastleLong;
-    int EnPassantSquare;
-    int HalfMove;
+    bool whiteCanCastleShort;
+    bool whiteCanCastleLong;
+    bool blackCanCastleShort;
+    bool blackCanCastleLong;
+    int getPassantSquare;
+    int halfMove;
     Fen(std::string);
     void Parse();
 	void split(vstring &, const string &, const string &, bool);

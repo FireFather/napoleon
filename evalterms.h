@@ -1,84 +1,85 @@
 #pragma once
 #include "piece.h"
 
-static int pawnValue = 100;
-static int knightValue = 330;
-static int bishopValue = 330;
-static int rookValue = 500;
-static int queenValue = 1000;
+static int pawnValue = 90; 
+static int knightValue = 335;
+static int bishopValue = 350;
+static int rookValue = 540;
+static int queenValue = 1100;
 static int kingValue = 2000;
 
-static int PieceValue[] =
+static int pieceValue[] =
 	{
 	pawnValue, knightValue, bishopValue, rookValue, queenValue, kingValue, 99999
 	};
 
-static int OpeningGameMat =
-	PieceValue[PieceType::Pawn] * 16
-	+ PieceValue[PieceType::Knight] * 4
-	+ PieceValue[PieceType::Bishop] * 4
-	+ PieceValue[PieceType::Rook] * 4
-	+ PieceValue[PieceType::Queen] * 2
-	+ PieceValue[PieceType::King] * 2;
+static int openingMaterial =				// 12540
+	pieceValue[pieceType::Pawn] * 16		// 1440
+	+ pieceValue[pieceType::Knight] * 4		// 1340
+	+ pieceValue[pieceType::Bishop] * 4		// 1400
+	+ pieceValue[pieceType::Rook] * 4		// 2160
+	+ pieceValue[pieceType::Queen] * 2		// 2200
+	+ pieceValue[pieceType::King] * 2;		// 4000
 
-static int OpeningMargin = 1200;
-static int MiddleGameMargin = 3000;
-static int MiddleGameMat = OpeningGameMat - OpeningMargin;
-static int EndGameMat = MiddleGameMat - MiddleGameMargin;
-static int MaxPlayerMat = OpeningGameMat / 2;
-static int OpeningNonPawnMaterial = OpeningGameMat - PieceValue[PieceType::Pawn] * 16;
+static int endGameMaterial = openingMaterial - 4200; // to test: 6270
+static int maxMaterial = openingMaterial / 2;
+static int openingNonPawnMaterial = openingMaterial - pieceValue[pieceType::Pawn] * 16;
 
-static int TempoBonus = 5;
-static int KnightTropism = 5;
-static int BishopTropism = 10;
-static int RookTropism = 10;
-static int QueenTropism = 3;
-static int QueenPenaltyOpening = 15;
-static int QueenPenaltyEndGame = 0;
-
-static int BishopPair[3] =
+static int tempoBonus[2] =
 	{
-	30, 50, 50
+	5, 5
 	};
 
-static int PawnBonus[3] =
+static int queenPenalty[2] =
 	{
-	0, 10, 30
+	15, 0
 	};
 
-static int KnightBonus[3] =
+static int bishopPair[2] =
 	{
-	3, -5, -12
+	33, 55
 	};
 
-static int RookBonus[3] =
+static int isolatedPawn[2] =
 	{
-	0, 5, 15
-	};  
-
-static int isolatedPawn[8] =
-	{
-	5, 7, 10, 18, 18, 10, 7, 5
+	16, 8
 	};
 
-static int multiPawn[8] =      
+static int doubledPawn[2] =      
 	{
-	0, 0, 10, 20, 35, 50, 75, 100
+	5, 2
 	};
 
-static int passedPawn[3][8] =			  
+static int passedPawn[2][8] =			  
 	{
-	{ 0, 0, 10, 15, 25, 30, 30, 0 },	 
-	{ 0 },								   
+	{ 0, 0, 10, 15, 25, 30, 30, 0 },	 							   
 	{ 0, 0, 10, 20, 40, 60, 125, 0 }	 
 	};
 
-static int mobilityBonus[][28] =
+static int pawnShelter[2][2] =
+	{ 
+	{ 5, 4 },
+	{ 3, 2 }
+	};
+
+static int mobilityBonus[2][7][28] =
 	{
-	{},																 
-	{ -15, -10, -5, 0, 5, 10, 10, 15, 15 },							 
-	{ -15, -10, -5, 0, 5, 10, 15, 20, 25, 30, 30, 35, 35, 35 },		 
-	{ -5, -5, 0, 5, 10, 10, 15, 20, 30, 35, 35, 40, 40, 40, 40 },	 
-	{ -5, -4, -3, -2, -1, 0, 5, 10, 13, 16, 18, 20, 22, 24, 26, 28, 29, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30 },				 
-	{},																 
+		{
+		{},
+		{ -15, -10, -5, 0, 5, 10, 10, 15, 15 },
+		{ -15, -10, -5, 0, 5, 10, 15, 20, 25, 30, 30, 35, 35, 35 },
+		{ -5, -5, 0, 5, 10, 10, 15, 20, 30, 35, 35, 40, 40, 40, 40 },
+		{ -5, -4, -3, -2, -1, 0, 5, 10, 13, 16, 18, 20, 22, 24, 26, 28, 29, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30 },
+		{},
+		{},
+		},
+		{
+		{},
+		{ -15, -10, -5, 0, 5, 10, 10, 15, 15 },
+		{ -15, -10, -5, 0, 5, 10, 15, 20, 25, 30, 30, 35, 35, 35 },
+		{ -5, -5, 0, 5, 10, 10, 15, 20, 30, 35, 35, 40, 40, 40, 40 },
+		{ -5, -4, -3, -2, -1, 0, 5, 10, 13, 16, 18, 20, 22, 24, 26, 28, 29, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30 },
+		{},
+		{},
+		},
 	};

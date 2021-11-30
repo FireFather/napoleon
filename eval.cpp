@@ -3,204 +3,163 @@
 #include "castle.h"
 #include "evalterms.h"
 
-int Eval::Evaluate( Position &position )
+int Eval::evaluate(Position &position)
     {
-    Score scores(0, 0);
-    Score wPstValues, bPstValues;
-    auto wking_square = position.KingSquare(PieceColor::White);
-    auto bking_square = position.KingSquare(PieceColor::Black);
+    Score score(0, 0);
+    Score wPstScore, bPstScore;
+    auto wking_square = position.getKingSquare(pieceColor::White);
+    auto bking_square = position.getKingSquare(pieceColor::Black);
 
-    uint64_t king_proximity[2] =
-        {
-        Moves::KingProximity[PieceColor::White][wking_square], Moves::KingProximity[PieceColor::Black][bking_square]
-        };
+    int material = position.materialScore(pieceColor::White);
 
-    int material = position.MaterialBalance(PieceColor::White);
+	// bishop pair bonus
+	if (position.getNumPieces(pieceColor::White, pieceType::Bishop) == 2)
+		updateScore(score, bishopPair[OP], bishopPair[EG]);
+
+	if (position.getNumPieces(pieceColor::Black, pieceType::Bishop) == 2)
+		updateScore(score, -bishopPair[OP], -bishopPair[EG]);
 
     // PST evaluation
-    wPstValues = position.PstValue(PieceColor::White);
-    bPstValues = position.PstValue(PieceColor::Black);
+    wPstScore = position.getPstScore(pieceColor::White);
+    bPstScore = position.getPstScore(pieceColor::Black);
 
-    updateScore(scores, material + (wPstValues.first - bPstValues.first) / 2,
-        material + (wPstValues.second - bPstValues.second) / 2);
+    updateScore(score, material + (wPstScore.first - bPstScore.first), material + (wPstScore.second - bPstScore.second));
 
-    // phase dependant piece bonus
-    int wPawns = position.NumOfPieces(PieceColor::White, Pawn);
-    int bPawns = position.NumOfPieces(PieceColor::Black, Pawn);
-    updateScore(scores, PawnBonus[Opening] * wPawns, PawnBonus[EndGame] * wPawns);
-    updateScore(scores, -PawnBonus[Opening] * bPawns, -PawnBonus[EndGame] * bPawns);
-
-    int wKnights = position.NumOfPieces(PieceColor::White, Knight);
-    int bKnights = position.NumOfPieces(PieceColor::Black, Knight);
-    updateScore(scores, KnightBonus[Opening] * wKnights, KnightBonus[EndGame] * wKnights);
-    updateScore(scores, -KnightBonus[Opening] * bKnights, -KnightBonus[EndGame] * bKnights);
-
-    int wRooks = position.NumOfPieces(PieceColor::White, Rook);
-    int bRooks = position.NumOfPieces(PieceColor::Black, Rook);
-    updateScore(scores, RookBonus[Opening] * wRooks, RookBonus[EndGame] * wRooks);
-    updateScore(scores, -RookBonus[Opening] * bRooks, -RookBonus[EndGame] * bRooks);
+	// tempo bonus
+	if (position.getSideToMove() == pieceColor::White)
+		updateScore(score, tempoBonus[OP], tempoBonus[EG]);
+	else
+		updateScore(score, -tempoBonus[OP], -tempoBonus[EG]);
 
     // premature queen development penalty
-    if (!position.IsOnSquare(PieceColor::White, PieceType::Queen, Square::D1))
-        updateScore(scores, -QueenPenaltyOpening, -QueenPenaltyEndGame);
-    if (!position.IsOnSquare(PieceColor::Black, PieceType::Queen, Square::D8))
-        updateScore(scores, QueenPenaltyOpening, QueenPenaltyEndGame);
-
-    // tempo bonus
-    if (position.SideToMove() == PieceColor::White)
-        updateScore(scores, TempoBonus);
-    else
-        updateScore(scores, -TempoBonus);
-
-    // bishop pair bonus
-    if (position.NumOfPieces(PieceColor::White, PieceType::Bishop) == 2)
-        updateScore(scores, BishopPair[Opening], BishopPair[EndGame]);
-
-    if (position.NumOfPieces(PieceColor::Black, PieceType::Bishop) == 2)
-        updateScore(scores, -BishopPair[Opening], -BishopPair[EndGame]);
+    if (!position.isOnSquare(pieceColor::White, pieceType::Queen, Square::D1))
+		updateScore(score, -queenPenalty[OP], -queenPenalty[EG]);
+    if (!position.isOnSquare(pieceColor::Black, pieceType::Queen, Square::D8))
+		updateScore(score, queenPenalty[OP], queenPenalty[EG]);
 
     // doubled/isolated pawns
-    uint64_t wpawns = position.Pieces(PieceColor::White, Pawn);
-    uint64_t bpawns = position.Pieces(PieceColor::Black, Pawn);
+    uint64_t wpawns = position.Pieces(pieceColor::White, Pawn);
+    uint64_t bpawns = position.Pieces(pieceColor::Black, Pawn);
 
-    for ( uint8_t f = 0; f < 8; f++ )
+    for (uint8_t file = 0; file < 8; file++)
         {
         int pawns;
 
-        if ((pawns = position.PawnsOnFile(PieceColor::White, f)))
+        if ((pawns = position.getPawnsOnFile(pieceColor::White, file)))
             {
-            if (!(wpawns &Moves::SideFiles[f]))
-                updateScore(scores, -isolatedPawn[f]);
+            if (!(wpawns &Moves::adjacentFiles[file]))
+				updateScore(score, -isolatedPawn[OP], -isolatedPawn[EG]);
 
-            updateScore(scores, -multiPawn[pawns]);
-
-            if (f < 7)
-                updateScore(scores, -multiPawn[position.PawnsOnFile(PieceColor::White, ++f)]);
+			if (pawns > 1)
+				updateScore(score, -doubledPawn[OP], -doubledPawn[EG]);
             }
         }
 
-    for ( uint8_t f = 0; f < 8; f++ )
+    for (uint8_t file = 0; file < 8; file++)
         {
         int pawns;
 
-        if ((pawns = position.PawnsOnFile(PieceColor::Black, f)))
+        if ((pawns = position.getPawnsOnFile(pieceColor::Black, file)))
             {
-            if (!(bpawns &Moves::SideFiles[f]))
-                updateScore(scores, isolatedPawn[f]);
+            if (!(bpawns &Moves::adjacentFiles[file]))
+				updateScore(score, isolatedPawn[OP], isolatedPawn[EG]);
 
-            updateScore(scores, multiPawn[pawns]);
-
-            if (f < 7)
-                updateScore(scores, multiPawn[position.PawnsOnFile(PieceColor::Black, ++f)]);
+			if (pawns > 1)
+				updateScore(score, doubledPawn[OP], doubledPawn[EG]);
             }
         }
 
-    // mobility evaluation
-    PieceInfo piece;
-    auto pieceList = position.PieceList();
+    pieceInfo piece;
+    auto pieceList = position.pieceList();
 
-    for ( uint8_t sq = Square::A1; sq <= Square::H8; sq++ )
+    for (uint8_t sq = Square::A1; sq <= Square::H8; sq++)
         {
         piece = pieceList[sq];
 
-        if (piece.Type != PieceType::None)
-            {
+        if (piece.Type != pieceType::noType)
+            { // passed pawns
             if (piece.Type == Pawn)
                 {
-                if ((Moves::PasserSpan[piece.Color][sq] & position.Pieces(Piece::GetOpposite(piece.Color), Pawn)) == 0)
+                if ((Moves::passerSpan[piece.Color][sq] & position.Pieces(Piece::getOpposite(piece.Color), Pawn)) == 0)
                     {
-                    auto rank = Square::GetRankIndex(sq);
+                    auto rank = Square::getRankIndex(sq);
 
-                    if (piece.Color == PieceColor::White)
-                        updateScore(scores, passedPawn[Opening][rank], passedPawn[EndGame][rank]);
+                    if (piece.Color == pieceColor::White)
+                        updateScore(score, passedPawn[OP][rank], passedPawn[EG][rank]);
                     else
-                        updateScore(scores, -passedPawn[Opening][7 - rank], -passedPawn[EndGame][7 - rank]);
+                        updateScore(score, -passedPawn[OP][7 - rank], -passedPawn[EG][7 - rank]);
                     }
                 }
-            else if (piece.Color == PieceColor::White)
-                updateScore(scores, EvaluatePiece(piece, sq, king_proximity[PieceColor::Black], position));
-            else
-                updateScore(scores, -EvaluatePiece(piece, sq, king_proximity[PieceColor::White], position));
+			else
+				{
+				uint64_t allSquares = 0xFFFFFFFFFFFFFFFF;
+				uint8_t us = piece.Color;
+				uint8_t them = Piece::getOpposite(us);
+				uint64_t b = 0;
+
+				// mobility
+				switch (piece.Type)
+					{
+					case pieceType::Knight:
+						b = Knight::targetsFrom(sq, us, position) & ~Pawn::getAnyAttack(position.Pieces(them, pieceType::Pawn), them, allSquares);
+						break;
+					case pieceType::Bishop:
+						b = Bishop::targetsFrom(sq, us, position) & ~Pawn::getAnyAttack(position.Pieces(them, pieceType::Pawn), them, allSquares);
+						break;
+					case pieceType::Rook:
+						b = Rook::targetsFrom(sq, us, position) & ~Pawn::getAnyAttack(position.Pieces(them, pieceType::Pawn), them, allSquares);
+						break;
+					case pieceType::Queen:
+						b = Queen::targetsFrom(sq, us, position) & ~Pawn::getAnyAttack(position.Pieces(them, pieceType::Pawn), them, allSquares);
+						break;
+					}
+
+				int count = popCount(b);
+				if (piece.Color == pieceColor::White)
+					updateScore(score, mobilityBonus[OP][piece.Type][count], mobilityBonus[EG][piece.Type][count]);
+				else
+					updateScore(score, -mobilityBonus[OP][piece.Type][count], -mobilityBonus[EG][piece.Type][count]);
+				}
             }
         }
 
-    //king safety
-    int shelter1 = 0, shelter2 = 0;
+    // pawn shelter
+	int shelter1 = 0, shelter2 = 0;
+    uint64_t pawns = position.Pieces(pieceColor::White, Pawn);
 
-    //pawn shelter
-    uint64_t pawns = position.Pieces(PieceColor::White, Pawn);
-
-    if (Masks::SquareMask[wking_square] & Castle::WhiteKingSide)
+    if (Masks::squareMask[wking_square] & Castle::whiteKingSide)
         {
-        shelter1 = PopCount(pawns & Castle::WhiteKingShield);
-        shelter2 = PopCount(pawns & Direction::OneStepNorth(Castle::WhiteKingShield));
+        shelter1 = popCount(pawns & Castle::whiteKingShield);
+        shelter2 = popCount(pawns & Direction::oneStepNorth(Castle::whiteKingShield));
         }
-    else if (Masks::SquareMask[wking_square] & Castle::WhiteQueenSide)
+    else if (Masks::squareMask[wking_square] & Castle::whiteQueenSide)
         {
-        shelter1 = PopCount(pawns & Castle::WhiteQueenShield);
-        shelter2 = PopCount(pawns & Direction::OneStepNorth(Castle::WhiteQueenShield));
+        shelter1 = popCount(pawns & Castle::whiteQueenShield);
+        shelter2 = popCount(pawns & Direction::oneStepNorth(Castle::whiteQueenShield));
         }
-    updateScore(scores, shelter1 * 4 + shelter2 * 3, shelter1 * 2 + shelter2 * 3); // shelter bonus
+    updateScore(score,
+		shelter1 * pawnShelter[OP][0] + shelter2 * pawnShelter[OP][1],
+		shelter1 * pawnShelter[EG][0] + shelter2 * pawnShelter[EG][1]);
 
-    pawns = position.Pieces(PieceColor::Black, Pawn);
+    pawns = position.Pieces(pieceColor::Black, Pawn);
 
-    if (Masks::SquareMask[bking_square] & Castle::BlackKingSide)
+    if (Masks::squareMask[bking_square] & Castle::blackKingSide)
         {
-        shelter1 = PopCount(pawns & Castle::BlackKingShield);
-        shelter2 = PopCount(pawns & Direction::OneStepSouth(Castle::BlackKingShield));
+        shelter1 = popCount(pawns & Castle::blackKingShield);
+        shelter2 = popCount(pawns & Direction::oneStepSouth(Castle::blackKingShield));
         }
-    else if (Masks::SquareMask[bking_square] & Castle::BlackQueenSide)
+    else if (Masks::squareMask[bking_square] & Castle::blackQueenSide)
         {
-        shelter1 = PopCount(pawns & Castle::BlackQueenShield);
-        shelter2 = PopCount(pawns & Direction::OneStepSouth(Castle::BlackQueenShield));
+        shelter1 = popCount(pawns & Castle::blackQueenShield);
+        shelter2 = popCount(pawns & Direction::oneStepSouth(Castle::blackQueenShield));
         }
-    updateScore(scores, -(shelter1 * 4 + shelter2 * 3), -(shelter1 * 2 + shelter2 * 3)); // shelter bonus
+    updateScore(score,
+		-(shelter1 * pawnShelter[OP][0] + shelter2 * pawnShelter[OP][1]),
+		-(shelter1 * pawnShelter[EG][0] + shelter2 * pawnShelter[EG][1]));
 
-    int opening = scores.first;
-    int endgame = scores.second;
+    int opening = score.first;
+    int endgame = score.second;
     int phase = position.Phase();
-    int score = ((opening * (MaxPhase - phase)) + (endgame * phase)) / MaxPhase;
-    return score * (1 - (position.SideToMove() * 2)); // score relative to side to move
-    }
-
-int Eval::EvaluatePiece( PieceInfo piece, uint8_t square, uint64_t king_proxy, Position &position )
-    {
-	uint64_t Universe = 0xFFFFFFFFFFFFFFFF;
-    uint8_t us = piece.Color;
-    uint8_t enemy = Piece::GetOpposite(us);
-    uint64_t b = 0;
-    int tropism = 0;
-    int distance = 7; 
-    uint8_t ksq = position.KingSquare(enemy);
-
-    switch( piece.Type )
-        {
-        case PieceType::Knight:
-            b = Knight::TargetsFrom(square, us, position) & ~Pawn::GetAnyAttack(position.Pieces(enemy, PieceType::Pawn), enemy, Universe);
-				// exclude squares controlled by enemy pawns
-            tropism = KnightTropism;
-            distance = Moves::Distance[square][ksq];
-            break;
-        case PieceType::Bishop:
-            b = Bishop::TargetsFrom(square, us, position);
-            tropism = BishopTropism; // TO TEST: divide by distance to king
-            distance = Moves::Distance[square][ksq] * 2;
-            break;
-        case PieceType::Rook:
-            b = Rook::TargetsFrom(square, us, position);
-            tropism = RookTropism;
-            distance = Moves::Distance[square][ksq] * 2;
-            break;
-        case PieceType::Queen:
-            b = Queen::TargetsFrom(square, us, position);
-            tropism = QueenTropism;
-            distance = Moves::Distance[square][ksq] / 2;
-            break;
-        }
-
-    int count = PopCount(b);
-    tropism = tropism * PopCount(king_proxy & b) + (7 - distance);
-    tropism = int(((float)tropism*position.Material(us)) / (float)MaxPlayerMat); // tropism scaling
-
-    return mobilityBonus[piece.Type][count] + tropism;
+    int finalScore = ((opening * (maxPhase - phase)) + (endgame * phase)) / maxPhase;
+    return finalScore * (1 - (position.getSideToMove() * 2));
     }

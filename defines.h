@@ -5,7 +5,21 @@
 using namespace std;
 typedef std::pair<int, int> Score;
 
-#define PEXT
+#define ENGINE "Napoleon"
+#define VERSION "2.0"
+#define AUTHOR "Marco Pampaloni"
+
+//#define PEXT
+
+#ifdef _WIN64
+#ifdef PEXT
+#define PLATFORM "x64 pext"
+#else
+#define PLATFORM "x64"
+#endif
+#else
+#define PLATFORM "w32"
+#endif
 
 #pragma warning(disable : 6326) //Potential comparison of a constant with another constant
 #pragma warning(disable : 6386) //Buffer overrun while writing to 'this->kingSquare'
@@ -25,13 +39,13 @@ typedef std::pair<int, int> Score;
 #endif
 
 #if defined(__GNUC__) && defined(__LP64__)
-INLINE int BitScanForward( uint64_t bitBoard )
+INLINE int bitScanForward(uint64_t bitBoard)
     {
     __asm__ ("bsfq %0, %0": "=r"(bitBoard) : "0" (bitBoard));
     return bitBoard;
     }
 
-INLINE int BitScanForwardReset( uint64_t &bitBoard )
+INLINE int bitScanForwardReset(uint64_t &bitBoard)
     {
     uint64_t index;
     __asm__ ("bsfq %1, %0": "=r"(index) : "rm"(bitBoard));
@@ -39,25 +53,25 @@ INLINE int BitScanForwardReset( uint64_t &bitBoard )
     return index;
     }
 #elif defined(__GNUC__)
-INLINE int BitScanForward( uint64_t bitBoard )
+INLINE int bitScanForward(uint64_t bitBoard)
     {
     return __builtin_ctzll(bitBoard);
     }
 
-INLINE int BitScanForwardReset( uint64_t &bitBoard )
+INLINE int bitScanForwardReset(uint64_t &bitBoard)
     {
     uint64_t bb = bitBoard;
     bitBoard &= (bitBoard - 1);
     return __builtin_ctzll(bb);
     }
 #elif defined(_MSC_VER) && defined(_WIN64)
-INLINE int BitScanForward( uint64_t bitBoard )
+INLINE int bitScanForward(uint64_t bitBoard)
     {
     unsigned long index;
     _BitScanForward64(&index, bitBoard);
     return (int)index;
     }
-INLINE int BitScanForwardReset( uint64_t &bitBoard )
+INLINE int bitScanForwardReset(uint64_t &bitBoard)
     {
     unsigned long index;
     _BitScanForward64(&index, bitBoard);
@@ -78,12 +92,12 @@ const int DeBrujinTable [] =
 	44, 24, 15,  8, 23,  7,  6,  5
     };
 
-INLINE int BitScanForward( uint64_t bitBoard )
+INLINE int bitScanForward(uint64_t bitBoard)
     {
     return DeBrujinTable[((bitBoard & -bitBoard)*DeBrujinValue) >> 58];
     }
 
-INLINE int BitScanForwardReset( uint64_t &bitBoard )
+INLINE int bitScanForwardReset(uint64_t &bitBoard)
     {
     uint64_t bb = bitBoard;
     bitBoard &= (bitBoard - 1);
@@ -91,7 +105,7 @@ INLINE int BitScanForwardReset( uint64_t &bitBoard )
     return DeBrujinTable[((bb & -bb)*DeBrujinValue) >> 58];
     }
 #endif
-INLINE int PopCount( uint64_t bitBoard )
+INLINE int popCount(uint64_t bitBoard)
     {
 #if defined(__GNUC__)
     return __builtin_popcountll(bitBoard);
@@ -109,7 +123,7 @@ INLINE int PopCount( uint64_t bitBoard )
 #endif
     }
 
-INLINE bool IsBitSet( uint64_t bitBoard, int bitPos )
+INLINE bool isBitSet(uint64_t bitBoard, int bitPos)
     {
     return (bitBoard &(static_cast<uint64_t>(1) << bitPos)) != 0;
     }

@@ -15,108 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="benchmark.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hashentry.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="move.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="pawn.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="search.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="searchinfo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="uci.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="zobrist.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="math.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hashtable.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="moves.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="movegen.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="movepick.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="clock.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="fen.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="eval.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="square.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="piece.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="position.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="benchmark.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="hashentry.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="move.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="pawn.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="search.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="searchinfo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="uci.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="zobrist.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="math.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="magics.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="masks.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ranks.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="files.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="castle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="clock.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="defines.h">
@@ -125,10 +30,34 @@
     <ClInclude Include="direction.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="pst.h">
+    <ClInclude Include="eval.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="evalterms.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="fen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="files.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hashentry.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="hashtable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="magics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="masks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="math.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="move.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="movegen.h">
@@ -137,25 +66,10 @@
     <ClInclude Include="movepick.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="smpinfo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="moves.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="clock.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="fen.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="evalterms.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="eval.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="square.h">
+    <ClInclude Include="pawn.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="piece.h">
@@ -164,8 +78,100 @@
     <ClInclude Include="position.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="pst.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ranks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="search.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="searchinfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="searchterms.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="smpinfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="square.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="string.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="uci.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="zobrist.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="benchmark.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="clock.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="eval.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fen.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hashentry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hashtable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="math.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="move.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="movegen.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="movepick.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="moves.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pawn.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="piece.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="position.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="search.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="searchinfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="square.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="string.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="uci.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="zobrist.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

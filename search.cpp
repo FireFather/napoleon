@@ -4,13 +4,13 @@
 #include "movepick.h"
 #include "searchterms.h"
 
-HashTable Search::Hash;
+hashTable Search::Hash;
 bool Search::pondering = false;
-std::atomic<bool> Search::PonderHit( false );
-std::atomic<bool> Search::StopSignal( true );
-std::atomic<bool> Search::quit( false );
-int Search::GameTime[2];
-int Search::MoveTime;
+std::atomic<bool> Search::ponderHit(false);
+std::atomic<bool> Search::stopSignal(true);
+std::atomic<bool> Search::quit(false);
+int Search::gameTime[2];
+int Search::moveTime;
 thread_local bool Search::sendOutput = false;
 thread_local SearchInfo Search::searchInfo;
 std::vector<std::thread> Search::threads;
@@ -19,38 +19,39 @@ std::condition_variable Search::smp;
 std::mutex mux;
 int Search::depth_limit = 100;
 int Search::cores;
-const int Search::default_cores = 1;
+const int Search::defaultCores = 1;
 
 int Search::razorMargin(int depth)
 	{
 	return (rzMultiplier * (depth - 1) + rzMargin);
 	}
+
 int Search::futilityMargin(int depth)
 	{
 	return (fpMargin * depth);
 	}
 
-int Search::predictTime( uint8_t color )
+int Search::predictTime(uint8_t color)
     {
-    int gameTime = GameTime[color];
-    return gameTime / 30 - (gameTime / (60*1000));
+    int GameTime = gameTime[color];
+    return GameTime / 30 - (GameTime / (60*1000));
     }
 
-Move Search::StartThinking( SearchType type, Position &position, bool verbose)
+Move Search::startThinking(SearchType type, Position &position, bool verbose)
     {
     Hash.Clear();
 
     sendOutput = verbose;
-    StopSignal = false;
+    stopSignal = false;
     pondering = false;
-    PonderHit = false;
-    searchInfo.SetDepthLimit(depth_limit);
+    ponderHit = false;
+    searchInfo.setDepthLimit(depth_limit);
 
     if (type == SearchType::Infinite || type == SearchType::Ponder)
         {
         if (type == SearchType::Ponder)
             pondering = true;
-        searchInfo.NewSearch();
+        searchInfo.newSearch();
         }
     else
         {
@@ -58,15 +59,15 @@ Move Search::StartThinking( SearchType type, Position &position, bool verbose)
 
         if (type == SearchType::TimePerGame)
             {
-            int gameTime = GameTime[position.SideToMove()];
-            time = gameTime / 30 - (gameTime / (60 * 1000));
+            int GameTime = gameTime[position.getSideToMove()];
+            time = GameTime / 30 - (GameTime / (60 * 1000));
             }
         else
             {
-            time = MoveTime;
+            time = moveTime;
             }
 
-        searchInfo.NewSearch(time);
+        searchInfo.newSearch(time);
         }
 
     Move move = iterativeSearch(position);
@@ -75,38 +76,38 @@ Move Search::StartThinking( SearchType type, Position &position, bool verbose)
 		{
 		Move ponder = getPonderMove(position, move);
 
-		if (ponder.IsNull())
-			Uci::Send<Command::BestMove>(move.ToAlgebraic());
+		if (ponder.isNull())
+			std::cout << "bestmove " << move.toAlgebraic() << endl;
 		else
-			Uci::Send<Command::BestMove>(move.ToAlgebraic(), ponder.ToAlgebraic());
+			std::cout << "bestmove " << move.toAlgebraic() << " ponder " << ponder.toAlgebraic() << endl;
 		}
-    searchInfo.StopSearch();
+    searchInfo.stopSearch();
     return move;
     }
 
-void Search::StopThinking()
+void Search::stopThinking()
     {
-    StopSignal = true;
-    smpInfo.SetReady(false);
+    stopSignal = true;
+    smpInfo.setReady(false);
     }
 
-void Search::KillThreads()
+void Search::killThreads()
     {
     quit = true;
     smp.notify_all();
 
-    for ( auto& t: threads )
+    for (auto& t: threads)
         t.join();
     threads.clear();
     quit = false;
     }
 
-void Search::InitializeThreads(int num_threads)
+void Search::initThreads(int num_threads)
     {
-	KillThreads();
+	killThreads();
 		{
 		std::lock_guard<std::mutex> lock(mux);
-		smpInfo.SetReady(false);
+		smpInfo.setReady(false);
 		}
         cores=num_threads;
         for (int i=1; i<cores; i++)
@@ -116,7 +117,7 @@ void Search::InitializeThreads(int num_threads)
 void Search::signalThreads(int depth, int alpha, int beta, const Position& position, bool ready)
     {
 	std::unique_lock<std::mutex> lock(mux);
-	smpInfo.UpdateInfo(depth, alpha, beta, position, ready);
+	smpInfo.updateInfo(depth, alpha, beta, position, ready);
 	lock.unlock();
 	smp.notify_all();
     }
@@ -129,7 +130,7 @@ void Search::smpSearch()
 
 	/* thread local information */
 	sendOutput = false;
-	searchInfo.NewSearch();
+	searchInfo.newSearch();
 
 	Move* move = new Move();
 	Position* position = new Position();
@@ -142,11 +143,11 @@ void Search::smpSearch()
 		if (quit)
 			break;
 		int rand_window = score_dist(eng);
-		auto fen = info.Board().GetFen();
+		auto fen = info.Board().getFen();
 
-		if(position->GetFen() != fen)
+		if(position->getFen() != fen)
 			{
-			searchInfo.NewSearch();
+			searchInfo.newSearch();
 			*position = info.Board();
             }
             searchRoot(info.Depth(), info.Alpha() - rand_window, info.Beta() + rand_window, std::ref(*move), std::ref(*position));
@@ -154,63 +155,63 @@ void Search::smpSearch()
     }
 
     // iterative deepening
-Move Search::iterativeSearch( Position &position )
+Move Search::iterativeSearch(Position &position)
     {
     Move move;
-    Move toMake = NullMove;
+    Move toMake = nullMove;
     int score;
     int temp;
 
-    score = searchRoot(searchInfo.MaxDepth(), -Search::Infinity, Search::Infinity, move, position);
-    searchInfo.IncrementDepth();
+    score = searchRoot(searchInfo.maxDepth(), -Search::Infinity, Search::Infinity, move, position);
+    searchInfo.incrementDepth();
 
-    while ((searchInfo.MaxDepth() < 100 && !searchInfo.TimeOver()) || pondering)
+    while ((searchInfo.maxDepth() < 100 && !searchInfo.timeOver()) || pondering)
         {
-        if (StopSignal)
+        if (stopSignal)
             break;
 
-        if (PonderHit)
+        if (ponderHit)
             {
-            searchInfo.SetGameTime(predictTime(position.SideToMove()));
-            PonderHit = false;
+            searchInfo.setGameTime(predictTime(position.getSideToMove()));
+            ponderHit = false;
             pondering = false;
             }
 
         searchInfo.SelDepth = 0;
-        searchInfo.ResetNodes();
+        searchInfo.resetNodes();
 
-        if (searchInfo.MaxDepth() > 5 && cores > 1)
-            signalThreads(searchInfo.MaxDepth(), -Search::Infinity, Search::Infinity, position, true);
+        if (searchInfo.maxDepth() > 5 && cores > 1)
+            signalThreads(searchInfo.maxDepth(), -Search::Infinity, Search::Infinity, position, true);
 
         // aspiration search
-        temp = searchRoot(searchInfo.MaxDepth(), score - aspirationValue, score + aspirationValue, move, position);
+        temp = searchRoot(searchInfo.maxDepth(), score - aspirationValue, score + aspirationValue, move, position);
 
         if (temp <= score - aspirationValue)
-            temp = searchRoot(searchInfo.MaxDepth(), -Search::Infinity, score + aspirationValue, move, position);
+            temp = searchRoot(searchInfo.maxDepth(), -Search::Infinity, score + aspirationValue, move, position);
 
         if (temp >= score + aspirationValue)
-            temp = searchRoot(searchInfo.MaxDepth(), score - aspirationValue, Search::Infinity, move, position);
+            temp = searchRoot(searchInfo.maxDepth(), score - aspirationValue, Search::Infinity, move, position);
 
         score = temp;
 
         if (score != Search::Unknown)
             toMake = move;
 
-        searchInfo.IncrementDepth();
+        searchInfo.incrementDepth();
         }
 
-    StopThinking();
+    stopThinking();
 
     return toMake;
     }
 
-int Search::searchRoot( int depth, int alpha, int beta, Move &moveToMake, Position &position )
+int Search::searchRoot(int depth, int alpha, int beta, Move &moveToMake, Position &position)
     {
     int score;
-    int startTime = int(searchInfo.ElapsedTime());
+    int startTime = int(searchInfo.elapsedTime());
 
     MovePick moves(position, searchInfo);
-    MoveGen::GetLegalMoves(moves.moves, moves.count, position);
+    moveGen::getLegalMoves(moves.moves, moves.count, position);
 
     // chopper pruning
     if (moves.count == 1)
@@ -223,12 +224,12 @@ int Search::searchRoot( int depth, int alpha, int beta, Move &moveToMake, Positi
 
     int i = 0;
 
-    for ( auto move = moves.First(); !move.IsNull(); move = moves.Next(), i++ )
+    for (auto move = moves.First(); !move.isNull(); move = moves.Next(), i++)
         {
-        if ((searchInfo.TimeOver() || StopSignal))
+        if ((searchInfo.timeOver() || stopSignal))
             return Search::Unknown;
 
-        position.MakeMove(move);
+        position.makeMove(move);
 
         if (i == 0)
             score = -Search::search<NodeType::PV>(depth - 1, -beta, -alpha, 1, position, false);
@@ -239,7 +240,7 @@ int Search::searchRoot( int depth, int alpha, int beta, Move &moveToMake, Positi
             if (score > alpha)
                 score = -search<NodeType::PV>(depth - 1, -beta, -alpha, 1, position, false);
             }
-        position.UndoMove(move);
+        position.undoMove(move);
 
         if (score > alpha)
             {
@@ -248,7 +249,7 @@ int Search::searchRoot( int depth, int alpha, int beta, Move &moveToMake, Positi
             if (score >= beta)
                 {
                 if (sendOutput)
-                    Uci::Send <Command::Info>(GetInfo(position, moveToMake, beta, depth, startTime));
+					std::cout << "info " << getInfo(position, moveToMake, beta, depth, startTime) << endl;
                 return beta;
                 }
 
@@ -257,15 +258,15 @@ int Search::searchRoot( int depth, int alpha, int beta, Move &moveToMake, Positi
         }
 
     if (sendOutput)
-        Uci::Send<Command::Info>(GetInfo(position, moveToMake, alpha, depth, startTime));
+		std::cout << "info " << getInfo(position, moveToMake, alpha, depth, startTime) << endl;
 
     return alpha;
     }
 
 template <NodeType node_type>
-int Search::search( int depth, int alpha, int beta, int ply, Position &position, bool cut_node )
+int Search::search(int depth, int alpha, int beta, int ply, Position &position, bool cut_node)
     {
-    searchInfo.VisitNode();
+    searchInfo.visitNode();
 
     ScoreType bound = ScoreType::Alpha;
     const bool pv = node_type == NodeType::PV;
@@ -273,16 +274,16 @@ int Search::search( int depth, int alpha, int beta, int ply, Position &position,
     bool extension = false;
     int score;
     int legal = 0;
-    Move best = NullMove;
+    Move best = nullMove;
 
     if (ply > searchInfo.SelDepth)
         searchInfo.SelDepth = ply;
 
     if (searchInfo.Nodes() % 10000 == 0 && sendOutput)
-        if (searchInfo.TimeOver())
-            StopSignal = true;
+        if (searchInfo.timeOver())
+            stopSignal = true;
 
-    if (StopSignal)
+    if (stopSignal)
         return alpha;
 
     // mate distance pruning
@@ -295,11 +296,11 @@ int Search::search( int depth, int alpha, int beta, int ply, Position &position,
     // Hash table lookup
     auto hashHit = Hash.Probe(position.zobrist, depth, alpha, beta);
 
-    if ((score = hashHit.first) != HashTable::Unknown)
+    if ((score = hashHit.first) != hashTable::Unknown)
         return score;
     best = hashHit.second;
 
-    uint64_t attackers = position.KingAttackers(position.KingSquare(position.SideToMove()), position.SideToMove());
+    uint64_t attackers = position.kingAttackers(position.getKingSquare(position.getSideToMove()), position.getSideToMove());
 
     if (attackers)
         {
@@ -310,54 +311,54 @@ int Search::search( int depth, int alpha, int beta, int ply, Position &position,
     if (depth == 0)
         return quiescence(alpha, beta, position);
 
-    if (position.IsRepetition())
+    if (position.isRepetition())
         return 0;
 
-    int eval = Eval::Evaluate(position);
+    int eval = Eval::evaluate(position);
 
 	// cutoff
     if (depth <= coDepth
 		&& !pv
 		&& !attackers
-		&& std::abs(alpha) < Search::Mate - MaxPly
-        && std::abs(beta) < Search::Mate - MaxPly
+		&& std::abs(alpha) < Search::Mate - maxPly
+        && std::abs(beta) < Search::Mate - maxPly
 		&& eval - coMultiplier * depth >= beta)
         {
         return beta;
         }
 
     // null move pruning
-    if (position.AllowNullMove()
+    if (position.getAllowNullMove()
     	&& !pv
     	&& depth >= nmpDepth
 		&& !attackers
-		&& !position.EndGame())
+		&& !position.EG())
         {
         int R = depth >= nmpReductionDepth ? nmpReduction1 : nmpReduction2;
 
         // cut node
-        position.MakeNullMove();
+        position.makeNullMove();
 
         // make a null-window search
         score = -search<NodeType::NONPV>(depth - R - 1, -beta, -beta + 1, ply, position, !cut_node);
-        position.UndoNullMove();
+        position.undoNullMove();
 
         if (score >= beta)
             return beta;
         }
 
     // internal iterative deepening (IID)
-    if (depth >= iidDepth && best.IsNull() && pv)
+    if (depth >= iidDepth && best.isNull() && pv)
         {
         int R = iidReduction;
 
-        if (position.AllowNullMove())
-            position.ToggleNullMove();
+        if (position.getAllowNullMove())
+            position.toggleNullMove();
 
         search<node_type>(depth - R - 1, alpha, beta, ply, position, cut_node);
 
-        if (!position.AllowNullMove())
-            position.ToggleNullMove();
+        if (!position.getAllowNullMove())
+            position.toggleNullMove();
 
         //hash table lookup
         hashHit = Hash.Probe(position.zobrist, depth, alpha, beta);
@@ -385,9 +386,15 @@ int Search::search( int depth, int alpha, int beta, int ply, Position &position,
 		&& eval + futilityMargin(depth) <= alpha)
         futility = true;
 
+	// extended futility pruning
+	if (!pv
+		&& depth > efpDepth
+		&& eval + efpMargin <= alpha)
+		futility = true;
+
     MovePick moves(position, searchInfo);
 
-    MoveGen::GetPseudoLegalMoves<false>(moves.moves, moves.count, attackers, position); // get captures and non-captures
+    moveGen::getPseudoLegalMoves<false>(moves.moves, moves.count, attackers, position); // get captures and non-captures
 
     moves.Sort<false>(ply);
     moves.hashMove = best;
@@ -398,27 +405,27 @@ int Search::search( int depth, int alpha, int beta, int ply, Position &position,
 
     int moveNumber = 0;
     int newDepth = depth;
-    uint64_t pinned = position.PinnedPieces();
+    uint64_t pinned = position.pinnedPieces();
 
-    for ( auto move = moves.First(); !move.IsNull(); move = moves.Next() )
+    for (auto move = moves.First(); !move.isNull(); move = moves.Next())
         {
-        if (position.IsMoveLegal(move, pinned))
+        if (position.isMoveLegal(move, pinned))
             {
             legal++;
             int E = 0;
             newDepth = depth + E;
-            capture = position.IsCapture(move);
-            position.MakeMove(move);
+            capture = position.isCapture(move);
+            position.makeMove(move);
 
             // futility pruning
             if (futility
 				&& moveNumber > 0
 				&& !capture
-				&& !move.IsPromotion()
-                && !position.KingAttackers(position.KingSquare(position.SideToMove()), position.SideToMove()))
+				&& !move.isPromotion()
+                && !position.kingAttackers(position.getKingSquare(position.getSideToMove()), position.getSideToMove()))
                 {
                 pruned = true;
-                position.UndoMove(move);
+                position.undoMove(move);
                 continue;
                 }
 
@@ -436,11 +443,11 @@ int Search::search( int depth, int alpha, int beta, int ply, Position &position,
 					&& newDepth >= lmrDepth
 					&& !extension
 					&& !capture
-					&& !move.IsPromotion()
+					&& !move.isPromotion()
                 	&& !attackers
-                    && move != searchInfo.FirstKiller(ply)
-                    && move != searchInfo.SecondKiller(ply)
-                    && !position.KingAttackers(position.KingSquare(position.SideToMove()), position.SideToMove()))
+                    && move != searchInfo.firstKiller(ply)
+                    && move != searchInfo.secondKiller(ply)
+                    && !position.kingAttackers(position.getKingSquare(position.getSideToMove()), position.getSideToMove()))
                     {
                     R = lmr1;
                     if (moveNumber > lmrMoveNumber)
@@ -458,7 +465,7 @@ int Search::search( int depth, int alpha, int beta, int ply, Position &position,
                     }
                 }
 
-            position.UndoMove(move);
+            position.undoMove(move);
 
             if (score >= beta)
                 {
@@ -466,10 +473,10 @@ int Search::search( int depth, int alpha, int beta, int ply, Position &position,
                     return beta;
 
                 //killer moves and history heuristic
-                if (!position.IsCapture(move))
+                if (!position.isCapture(move))
                     {
-                    searchInfo.SetKillers(move, ply);
-                    searchInfo.SetHistory(move, position.SideToMove(), newDepth);
+                    searchInfo.setKillers(move, ply);
+                    searchInfo.setHistory(move, position.getSideToMove(), newDepth);
                     }
 
                 // for safety, we don't save forward pruned nodes inside transposition table
@@ -493,14 +500,14 @@ int Search::search( int depth, int alpha, int beta, int ply, Position &position,
     // check for stalemate and checkmate
     if (legal == 0)
         {
-        if (position.IsCheck())
+        if (position.getIsCheck())
             alpha = -Search::Mate + ply; // return best score for the deepest mate
         else
             alpha = 0;  // return draw score
         }
 
     // check for fifty moves rule
-    if (position.HalfMoveClock() >= 100)
+    if (position.getHalfMoveClock() >= 100)
         alpha = 0;
 
     // for safety, we don't save forward pruned nodes inside transposition table
@@ -511,26 +518,26 @@ int Search::search( int depth, int alpha, int beta, int ply, Position &position,
     }
 
 // quiescence is called at horizon nodes (depth = 0)
-int Search::quiescence( int alpha, int beta, Position &position )
+int Search::quiescence(int alpha, int beta, Position &position)
     {
-    searchInfo.VisitNode();
+    searchInfo.visitNode();
 
-    const uint64_t attackers = position.KingAttackers(position.KingSquare(position.SideToMove()), position.SideToMove());
+    const uint64_t attackers = position.kingAttackers(position.getKingSquare(position.getSideToMove()), position.getSideToMove());
     const bool inCheck = attackers;
     int stand_pat = 0; // to suppress warning
     int score;
 
     if (!inCheck)
         {
-        stand_pat = Eval::Evaluate(position);
+        stand_pat = Eval::evaluate(position);
 
         if (stand_pat >= beta)
             return beta;
 
-        int Delta = PieceValue[PieceType::Queen];
+        int Delta = pieceValue[pieceType::Queen];
 
-        if (position.IsPromotingPawn())
-            Delta += PieceValue[PieceType::Queen] - PieceValue[PieceType::Pawn];
+        if (position.isPromotingPawn())
+            Delta += pieceValue[pieceType::Queen] - pieceValue[pieceType::Pawn];
 
         // big delta futility pruning
         if (stand_pat < alpha - Delta)
@@ -541,35 +548,35 @@ int Search::quiescence( int alpha, int beta, Position &position )
         }
 
     // TO TEST
-    if (position.IsRepetition())
+    if (position.isRepetition())
         return 0;
 
-    const uint64_t pinned = position.PinnedPieces();
+    const uint64_t pinned = position.pinnedPieces();
 
     MovePick moves(position, searchInfo);
 
     if (!inCheck)
-        MoveGen::GetPseudoLegalMoves<true>(moves.moves, moves.count, attackers, position);  // get all capture moves
+        moveGen::getPseudoLegalMoves<true>(moves.moves, moves.count, attackers, position);  // get all capture moves
     else
-        MoveGen::GetPseudoLegalMoves<false>(moves.moves, moves.count, attackers, position); // get all evading moves
+        moveGen::getPseudoLegalMoves<false>(moves.moves, moves.count, attackers, position); // get all evading moves
 
     moves.Sort<true>();
 
-    for ( auto move = moves.First(); !move.IsNull(); move = moves.Next() )
+    for (auto move = moves.First(); !move.isNull(); move = moves.Next())
         {
         // delta futility pruning
         if (!inCheck)
             {
-            if (!move.IsPromotion() && (PieceValue[position.PieceOnSquare(move.ToSquare()).Type]
+            if (!move.isPromotion() && (pieceValue[position.pieceOnSquare(move.toSquare()).Type]
 				+ stand_pat + dfpMargin <= alpha || position.See(move) < 0))
                 continue;
             }
 
-        if (position.IsMoveLegal(move, pinned))
+        if (position.isMoveLegal(move, pinned))
             {
-            position.MakeMove(move);
+            position.makeMove(move);
             score = -quiescence(-beta, -alpha, position);
-            position.UndoMove(move);
+            position.undoMove(move);
 
             if (score >= beta)
                 return beta;
@@ -582,33 +589,33 @@ int Search::quiescence( int alpha, int beta, Position &position )
     return alpha;
     }
 
-std::string Search::GetPv( Position &position, Move toMake, int depth )
+std::string Search::getPV(Position &position, Move toMake, int depth)
     {
     std::string pv;
 
-    if (toMake.IsNull() || depth == 0)
+    if (toMake.isNull() || depth == 0)
         return pv;
     else
         {
-        pv = toMake.ToAlgebraic() + " ";
+        pv = toMake.toAlgebraic() + " ";
 
-        position.MakeMove(toMake);
-        pv += GetPv(position, Hash.GetPv(position.zobrist), depth - 1);
-        position.UndoMove(toMake);
+        position.makeMove(toMake);
+        pv += getPV(position, Hash.getPV(position.zobrist), depth - 1);
+        position.undoMove(toMake);
 
         return pv;
         }
     }
 
-std::string Search::GetInfo( Position &position, Move toMake, int score, int depth, int startTime )
+std::string Search::getInfo(Position &position, Move toMake, int score, int depth, int startTime)
     {
     std::ostringstream info;
-    double delta = searchInfo.ElapsedTime() - startTime;
-    double nps = (delta > 0 ? searchInfo.Nodes() * cores / delta : searchInfo.Nodes() * cores / 1) * 1000;
+    double delta = searchInfo.elapsedTime() - startTime;
+    double nps = (delta > 0 ? searchInfo.Nodes() * (double)cores / delta : searchInfo.Nodes() * (double)cores / 1) * (double)1000;
 
     info << "depth " << depth << " seldepth " << searchInfo.SelDepth;
 
-    if (std::abs(score) >= Search::Mate - MaxPly)
+    if (std::abs(score) >= Search::Mate - maxPly)
         {
         int plies = Search::Mate - std::abs(score) + 1;
 
@@ -620,20 +627,20 @@ std::string Search::GetInfo( Position &position, Move toMake, int score, int dep
     else
         info << " score cp " << score;
 
-    info << " time " << searchInfo.ElapsedTime()
+    info << " time " << searchInfo.elapsedTime()
 		 << " nodes " << searchInfo.Nodes() * cores
 		 << " nps " << static_cast<int>(nps)
-         << " pv " << GetPv(position, toMake, depth);
+         << " pv " << getPV(position, toMake, depth);
 
     return info.str();
     }
 
-Move Search::getPonderMove( Position &position, const Move toMake )
+Move Search::getPonderMove(Position &position, const Move toMake)
     {
-    Move move = NullMove;
-    position.MakeMove(toMake);
-    move = Hash.GetPv(position.zobrist);
-    position.UndoMove(toMake);
+    Move move = nullMove;
+    position.makeMove(toMake);
+    move = Hash.getPV(position.zobrist);
+    position.undoMove(toMake);
 
     return move;
     }

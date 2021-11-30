@@ -6,41 +6,42 @@
 class SpinLock
     {
     public:
-
-    void lock()
+	INLINE void lock()
         {
-        while (lck.test_and_set(std::memory_order_acquire)) { }
+        while (spinLock.test_and_set(std::memory_order_acquire)) { }
         }
 
-    void unlock()
+	INLINE void unlock()
         {
-        lck.clear(std::memory_order_release);
+        spinLock.clear(std::memory_order_release);
         }
+
     private:
-    std::atomic_flag lck = ATOMIC_FLAG_INIT;
+    std::atomic_flag spinLock = ATOMIC_FLAG_INIT;
     };
 
-class HashTable
+class hashTable
     {
     public:
     static const int Unknown = -999999;
-    static const int BucketSize = 4;
-    HashTable(int size = 32) noexcept;
-    void SetSize(int);
+    static const int bucketSize = 4;
+    hashTable(int size = 32) noexcept;
+    void setSize(int);
     void Save(uint64_t, uint8_t, int, Move, ScoreType);
     void Clear();
     std::pair<int, Move> Probe(uint64_t, uint8_t, int, int);
-    Move GetPv(uint64_t);
+    Move getPV(uint64_t);
+
     private:
     uint64_t mask;
     uint32_t entries;
-    uint32_t lock_entries;
+    uint32_t lockEntries;
     HashEntry *table;
     SpinLock *locks;
     HashEntry *at(uint64_t, int = 0)const;
     };
 
-inline HashEntry *HashTable::at( uint64_t key, int index ) const
+inline HashEntry *hashTable::at(uint64_t key, int index) const
     {
     return table + (key &mask)+index;
     }

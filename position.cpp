@@ -5,33 +5,33 @@
 
 Position::Position() noexcept
     {
-    Moves::InitAttacks();
+    Moves::initAttacks();
     Zobrist::Init();
 
-    pieces[PieceColor::White] = Empty;
-    pieces[PieceColor::Black] = Empty;
-    OccupiedSquares = Empty;
-    EmptySquares = Empty;
+    pieces[pieceColor::White] = Empty;
+    pieces[pieceColor::Black] = Empty;
+    occupiedSquares = Empty;
+    emptySquares = Empty;
 
-    for ( uint8_t c = PieceColor::White; c < PieceColor::None; c++ )
-        for ( uint8_t f = 0; f < 8; f++ )
+    for (uint8_t c = pieceColor::White; c < pieceColor::noColor; c++)
+        for (uint8_t f = 0; f < 8; f++)
             pawnsOnFile[c][f] = 0;
     }
 
-void Position::LoadFen( std::string pos )
+void Position::loadFen(std::string pos)
     {
     Fen fenString(pos);
 
-    for ( uint8_t c = PieceColor::White; c < PieceColor::None; c++ )
-        for ( uint8_t t = PieceType::Pawn; t < PieceType::None; t++ )
-            numOfPieces[c][t] = 0;
+    for (uint8_t c = pieceColor::White; c < pieceColor::noColor; c++)
+        for (uint8_t t = pieceType::Pawn; t < pieceType::noType; t++)
+            numPieces[c][t] = 0;
 
-    for ( uint8_t c = PieceColor::White; c < PieceColor::None; c++ )
-        for ( uint8_t f = 0; f < 8; f++ )
+    for (uint8_t c = pieceColor::White; c < pieceColor::noColor; c++)
+        for (uint8_t f = 0; f < 8; f++)
             pawnsOnFile[c][f] = 0;
 
-    material[PieceColor::White] = 0;
-    material[PieceColor::Black] = 0;
+    material[pieceColor::White] = 0;
+    material[pieceColor::Black] = 0;
     allowNullMove = true;
     currentPly = 0;
     zobrist = 0;
@@ -41,25 +41,25 @@ void Position::LoadFen( std::string pos )
     initializeEnPassantSquare(fenString);
     initializeBitBoards(fenString);
 
-    pstValue[PieceColor::White] = calculatePST(PieceColor::White);
-    pstValue[PieceColor::Black] = calculatePST(PieceColor::Black);
+    pstScore[pieceColor::White] = calculatePST(pieceColor::White);
+    pstScore[pieceColor::Black] = calculatePST(pieceColor::Black);
     }
 
-Score Position::calculatePST( uint8_t color ) const
+Score Position::calculatePST(uint8_t color) const
     {
-    PieceInfo piece;
+    pieceInfo piece;
     int pst[2][2] =
         {
         { 0 }
         };
 
-    for ( uint8_t sq = Square::A1; sq <= Square::H8; sq++ )
+    for (uint8_t sq = Square::A1; sq <= Square::H8; sq++)
         {
-        piece = PieceOnSquare(sq);
+        piece = pieceOnSquare(sq);
 
-        if (piece.Type != PieceType::None)
+        if (piece.Type != pieceType::noType)
             {
-            Score scores = Eval::PieceSquareValue(piece, sq);
+            Score scores = Eval::pieceSquareScore(piece, sq);
             pst[piece.Color][0] += scores.first;
             pst[piece.Color][1] += scores.second;
             }
@@ -68,24 +68,24 @@ Score Position::calculatePST( uint8_t color ) const
     return std::make_pair(pst[color][0], pst[color][1]);
     }
 
-void Position::AddPiece( PieceInfo piece, uint8_t sq )
+void Position::addPiece(pieceInfo piece, uint8_t sq)
     {
     pieceSet[sq] = piece;
 
-    if (piece.Type != PieceType::None)
+    if (piece.Type != pieceType::noType)
         {
-        numOfPieces[piece.Color][piece.Type]++;
-        material[piece.Color] += PieceValue[piece.Type];
-        zobrist ^= Zobrist::PieceInfo[piece.Color][piece.Type][sq];
+        numPieces[piece.Color][piece.Type]++;
+        material[piece.Color] += pieceValue[piece.Type];
+        zobrist ^= Zobrist::pieceInfo[piece.Color][piece.Type][sq];
 
-        if (piece.Type == PieceType::Pawn)
-            pawnsOnFile[piece.Color][Square::GetFileIndex(sq)]++;
+        if (piece.Type == pieceType::Pawn)
+            pawnsOnFile[piece.Color][Square::getFileIndex(sq)]++;
         }
     }
 
 void Position::clearPieceSet()
     {
-    for ( uint8_t i = 0; i < 64; i++ )
+    for (uint8_t i = 0; i < 64; i++)
         {
         pieceSet[i] = Null;
         }
@@ -93,109 +93,109 @@ void Position::clearPieceSet()
 
 void Position::updateGenericBitBoards()
     {
-    pieces[PieceColor::White] =
-        bitBoardSet[PieceColor::White][PieceType::Pawn] | bitBoardSet[PieceColor::White][PieceType::Knight]
-            | bitBoardSet[PieceColor::White][PieceType::Bishop] | bitBoardSet[PieceColor::White][PieceType::Rook]
-            | bitBoardSet[PieceColor::White][PieceType::Queen] | bitBoardSet[PieceColor::White][PieceType::King];
+    pieces[pieceColor::White] =
+        bitBoardSet[pieceColor::White][pieceType::Pawn] | bitBoardSet[pieceColor::White][pieceType::Knight]
+            | bitBoardSet[pieceColor::White][pieceType::Bishop] | bitBoardSet[pieceColor::White][pieceType::Rook]
+            | bitBoardSet[pieceColor::White][pieceType::Queen] | bitBoardSet[pieceColor::White][pieceType::King];
 
-    pieces[PieceColor::Black] =
-        bitBoardSet[PieceColor::Black][PieceType::Pawn] | bitBoardSet[PieceColor::Black][PieceType::Knight]
-            | bitBoardSet[PieceColor::Black][PieceType::Bishop] | bitBoardSet[PieceColor::Black][PieceType::Rook]
-            | bitBoardSet[PieceColor::Black][PieceType::Queen] | bitBoardSet[PieceColor::Black][PieceType::King];
+    pieces[pieceColor::Black] =
+        bitBoardSet[pieceColor::Black][pieceType::Pawn] | bitBoardSet[pieceColor::Black][pieceType::Knight]
+            | bitBoardSet[pieceColor::Black][pieceType::Bishop] | bitBoardSet[pieceColor::Black][pieceType::Rook]
+            | bitBoardSet[pieceColor::Black][pieceType::Queen] | bitBoardSet[pieceColor::Black][pieceType::King];
 
-    OccupiedSquares = pieces[PieceColor::White] | pieces[PieceColor::Black];
-    EmptySquares = ~OccupiedSquares;
+    occupiedSquares = pieces[pieceColor::White] | pieces[pieceColor::Black];
+    emptySquares = ~occupiedSquares;
     }
 
-void Position::initializeCastlingStatus( const Fen &fenString )
+void Position::initializeCastlingStatus(const Fen &fenString)
     {
     castlingStatus = 0;
 
-    if (fenString.WhiteCanCastleShort)
-        castlingStatus |= Castle::WhiteCastleOO;
+    if (fenString.whiteCanCastleShort)
+        castlingStatus |= Castle::whiteCastleOO;
 
-    if (fenString.WhiteCanCastleLong)
-        castlingStatus |= Castle::WhiteCastleOOO;
+    if (fenString.whiteCanCastleLong)
+        castlingStatus |= Castle::whiteCastleOOO;
 
-    if (fenString.BlackCanCastleShort)
-        castlingStatus |= Castle::BlackCastleOO;
+    if (fenString.blackCanCastleShort)
+        castlingStatus |= Castle::blackCastleOO;
 
-    if (fenString.BlackCanCastleLong)
-        castlingStatus |= Castle::BlackCastleOOO;
+    if (fenString.blackCanCastleLong)
+        castlingStatus |= Castle::blackCastleOOO;
 
     zobrist ^= Zobrist::Castling[castlingStatus];
     }
 
-void Position::initializesideToMove( const Fen &fenString )
+void Position::initializesideToMove(const Fen &fenString)
     {
     sideToMove = fenString.sideToMove;
 
-    if (sideToMove == PieceColor::Black)
+    if (sideToMove == pieceColor::Black)
         zobrist ^= Zobrist::Color;
     }
 
-void Position::initializePieceSet( const Fen &fenString )
+void Position::initializePieceSet(const Fen &fenString)
     {
-    for ( uint8_t i = 0; i < 64; i++ )
+    for (uint8_t i = 0; i < 64; i++)
         {
-        AddPiece(fenString.PiecePlacement[i], i);
+        addPiece(fenString.piecePlacement[i], i);
         }
     }
 
-void Position::initializeEnPassantSquare( const Fen &fenString )
+void Position::initializeEnPassantSquare(const Fen &fenString)
     {
-    enPassantSquare = fenString.EnPassantSquare;
+    enPassantSquare = fenString.getPassantSquare;
 
-    if (enPassantSquare != Square::None)
-        zobrist ^= Zobrist::Enpassant[Square::GetFileIndex(enPassantSquare)];
+    if (enPassantSquare != Square::noSquare)
+        zobrist ^= Zobrist::Enpassant[Square::getFileIndex(enPassantSquare)];
     }
 
-void Position::initializeHalfMoveClock( const Fen &fenString )
+void Position::initializeHalfMoveClock(const Fen &fenString)
     {
-    halfMoveClock = fenString.HalfMove;
+    halfMoveClock = fenString.halfMove;
     }
 
-void Position::initializeBitBoards( const Fen &fenString )
+void Position::initializeBitBoards(const Fen &fenString)
     {
-    for ( uint8_t i = PieceType::Pawn; i < PieceType::None; i++ )
-        for ( uint8_t l = PieceColor::White; l < PieceColor::None; l++ )
+    for (uint8_t i = pieceType::Pawn; i < pieceType::noType; i++)
+        for (uint8_t l = pieceColor::White; l < pieceColor::noColor; l++)
             bitBoardSet[l][i] = 0;
 
-    for ( uint8_t i = 0; i < 64; i++ )
+    for (uint8_t i = 0; i < 64; i++)
         {
-        if (fenString.PiecePlacement[i].Type == PieceType::King)
-            kingSquare[fenString.PiecePlacement[i].Color] = i;
+        if (fenString.piecePlacement[i].Type == pieceType::King)
+            kingSquare[fenString.piecePlacement[i].Color] = i;
 
-        if (fenString.PiecePlacement[i].Color != PieceColor::None)
-            bitBoardSet[fenString.PiecePlacement[i].Color][fenString.PiecePlacement[i].Type] |= Masks::SquareMask[i];
+        if (fenString.piecePlacement[i].Color != pieceColor::noColor)
+            bitBoardSet[fenString.piecePlacement[i].Color][fenString.piecePlacement[i].Type] |= Masks::squareMask[i];
         }
 
     updateGenericBitBoards();
     }
 
-Move Position::ParseMove( std::string str ) const
+Move Position::parseMove(std::string str) const
     {
     uint8_t from = Square::Parse(str.substr(0, 2));
     uint8_t to = Square::Parse(str.substr(2));
     Move move;
 
-    if (to == enPassantSquare && pieceSet[from].Type == PieceType::Pawn)
+    if (to == enPassantSquare && pieceSet[from].Type == pieceType::Pawn)
         move = Move(from, to, EnPassant);
 
     else if (str == "e1g1")
-        move = Castle::WhiteCastlingOO;
+        move = Castle::whiteCastlingOO;
 
     else if (str == "e8g8")
-        move = Castle::BlackCastlingOO;
+        move = Castle::blackCastlingOO;
 
     else if (str == "e1c1")
-        move = Castle::WhiteCastlingOOO;
+        move = Castle::whiteCastlingOOO;
 
     else if (str == "e8c8")
-        move = Castle::BlackCastlingOOO;
+        move = Castle::blackCastlingOOO;
 
     else if (str.size() == 5)
-        move = Move(from, to, 0x8 | (Piece::GetPiece(str[4]) - 1));
+        move = Move(from, to, 0x8 | (Piece::getPiece(str[4]) - 1));
 
     else
         move = Move(from, to);
@@ -203,18 +203,18 @@ Move Position::ParseMove( std::string str ) const
     return move;
     }
 
-void Position::MakeMove( Move move )
+void Position::makeMove(Move move)
     {
     bool incrementClock = true;
 
-    uint8_t from = move.FromSquare();
-    uint8_t to = move.ToSquare();
+    uint8_t from = move.fromSquare();
+    uint8_t to = move.toSquare();
     uint8_t promoted;
-    uint8_t captured = move.IsEnPassant() ? static_cast<uint8_t>(PieceType::Pawn) : pieceSet[to].Type;
+    uint8_t captured = move.isEnPassant() ? static_cast<uint8_t>(pieceType::Pawn) : pieceSet[to].Type;
     uint8_t pieceMoved = pieceSet[from].Type;
-    uint8_t enemy = Piece::GetOpposite(sideToMove);
+    uint8_t enemy = Piece::getOpposite(sideToMove);
 
-    bool capture = captured != PieceType::None;
+    bool capture = captured != pieceType::noType;
 
     castlingStatusHistory[currentPly] = castlingStatus;       
     enpSquaresHistory[currentPly] = enPassantSquare;        
@@ -227,169 +227,169 @@ void Position::MakeMove( Move move )
     pieceSet[to] = pieceSet[from];       
     pieceSet[from] = Null;      
 
-    updatePstvalue<Sub>(sideToMove, Eval::PieceSquareValue(PieceInfo(sideToMove, pieceMoved), from));
-    updatePstvalue<Add>(sideToMove, Eval::PieceSquareValue(PieceInfo(sideToMove, pieceMoved), to));
+    updatePstScore<Sub>(sideToMove, Eval::pieceSquareScore(pieceInfo(sideToMove, pieceMoved), from));
+    updatePstScore<Add>(sideToMove, Eval::pieceSquareScore(pieceInfo(sideToMove, pieceMoved), to));
 
-    uint64_t From = Masks::SquareMask[from];
-    uint64_t To = Masks::SquareMask[to];
+    uint64_t From = Masks::squareMask[from];
+    uint64_t To = Masks::squareMask[to];
     uint64_t FromTo = From | To;
 
     bitBoardSet[sideToMove][pieceMoved] ^= FromTo;
-    zobrist ^= Zobrist::PieceInfo[sideToMove][pieceMoved][from];        
-    zobrist ^= Zobrist::PieceInfo[sideToMove][pieceMoved][to];          
+    zobrist ^= Zobrist::pieceInfo[sideToMove][pieceMoved][from];        
+    zobrist ^= Zobrist::pieceInfo[sideToMove][pieceMoved][to];          
 
     pieces[sideToMove] ^= FromTo;
 
-    if (pieceMoved == PieceType::King)
+    if (pieceMoved == pieceType::King)
         {
         kingSquare[sideToMove] = to;
 
-        if (move.IsCastle())
+        if (move.isCastle())
             {
             makeCastle(from, to);
             }
 
-        if (sideToMove == PieceColor::White)
+        if (sideToMove == pieceColor::White)
             castlingStatus &=
-                ~(Castle::WhiteCastleOO | Castle::WhiteCastleOOO);         
+                ~(Castle::whiteCastleOO | Castle::whiteCastleOOO);         
         else
             castlingStatus &=
-                ~(Castle::BlackCastleOO | Castle::BlackCastleOOO);         
+                ~(Castle::blackCastleOO | Castle::blackCastleOOO);         
         }
-    else if (pieceMoved == PieceType::Rook)            
+    else if (pieceMoved == pieceType::Rook)            
         {
         if (castlingStatus)                                              
             {
-            if (sideToMove == PieceColor::White)
+            if (sideToMove == pieceColor::White)
                 {
                 if (from == Square::A1)
-                    castlingStatus &= ~Castle::WhiteCastleOOO;
+                    castlingStatus &= ~Castle::whiteCastleOOO;
 
                 else if (from == Square::H1)
-                    castlingStatus &= ~Castle::WhiteCastleOO;
+                    castlingStatus &= ~Castle::whiteCastleOO;
                 }
             else
                 {
                 if (from == Square::A8)
-                    castlingStatus &= ~Castle::BlackCastleOOO;
+                    castlingStatus &= ~Castle::blackCastleOOO;
 
                 else if (from == Square::H8)
-                    castlingStatus &= ~Castle::BlackCastleOO;
+                    castlingStatus &= ~Castle::blackCastleOO;
                 }
             }
         }
-    else if (move.IsPromotion())
+    else if (move.isPromotion())
         {
-        promoted = move.PiecePromoted();
-        pieceSet[to] = PieceInfo(sideToMove, promoted);
-        bitBoardSet[sideToMove][PieceType::Pawn] ^= To;
+        promoted = move.piecePromoted();
+        pieceSet[to] = pieceInfo(sideToMove, promoted);
+        bitBoardSet[sideToMove][pieceType::Pawn] ^= To;
         bitBoardSet[sideToMove][promoted] ^= To;
-        numOfPieces[sideToMove][PieceType::Pawn]--;
-        numOfPieces[sideToMove][promoted]++;
+        numPieces[sideToMove][pieceType::Pawn]--;
+        numPieces[sideToMove][promoted]++;
 
-        material[sideToMove] -= PieceValue[PieceType::Pawn];
-        material[sideToMove] += PieceValue[promoted];
-        zobrist ^= Zobrist::PieceInfo[sideToMove][PieceType::Pawn][to];
-        zobrist ^= Zobrist::PieceInfo[sideToMove][promoted][to];
-        updatePstvalue<Sub>(sideToMove, Eval::PieceSquareValue(PieceInfo(sideToMove, PieceType::Pawn), to));
-        updatePstvalue<Add>(sideToMove, Eval::PieceSquareValue(PieceInfo(sideToMove, promoted), to));
+        material[sideToMove] -= pieceValue[pieceType::Pawn];
+        material[sideToMove] += pieceValue[promoted];
+        zobrist ^= Zobrist::pieceInfo[sideToMove][pieceType::Pawn][to];
+        zobrist ^= Zobrist::pieceInfo[sideToMove][promoted][to];
+        updatePstScore<Sub>(sideToMove, Eval::pieceSquareScore(pieceInfo(sideToMove, pieceType::Pawn), to));
+        updatePstScore<Add>(sideToMove, Eval::pieceSquareScore(pieceInfo(sideToMove, promoted), to));
 
         if (!capture)
-            pawnsOnFile[sideToMove][Square::GetFileIndex(from)]--;
+            pawnsOnFile[sideToMove][Square::getFileIndex(from)]--;
         else
-            pawnsOnFile[sideToMove][Square::GetFileIndex(to)]--;
+            pawnsOnFile[sideToMove][Square::getFileIndex(to)]--;
         }
 
     if (capture)
         {
-        if (move.IsEnPassant())
+        if (move.isEnPassant())
             {
             uint64_t piece;
 
-            if (sideToMove == PieceColor::White)
+            if (sideToMove == pieceColor::White)
                 {
-                piece = Masks::SquareMask[enPassantSquare - 8];
+                piece = Masks::squareMask[enPassantSquare - 8];
                 pieceSet[enPassantSquare - 8] = Null;
-                updatePstvalue
-                    <Sub>(enemy, Eval::PieceSquareValue(PieceInfo(enemy, PieceType::Pawn), enPassantSquare - 8));
-                zobrist ^= Zobrist::PieceInfo[enemy][PieceType::Pawn][enPassantSquare
+                updatePstScore
+                    <Sub>(enemy, Eval::pieceSquareScore(pieceInfo(enemy, pieceType::Pawn), enPassantSquare - 8));
+                zobrist ^= Zobrist::pieceInfo[enemy][pieceType::Pawn][enPassantSquare
                     - 8];        
                 }
             else
                 {
-                piece = Masks::SquareMask[enPassantSquare + 8];
+                piece = Masks::squareMask[enPassantSquare + 8];
                 pieceSet[enPassantSquare + 8] = Null;
-                updatePstvalue
-                    <Sub>(enemy, Eval::PieceSquareValue(PieceInfo(enemy, PieceType::Pawn), enPassantSquare + 8));
-                zobrist ^= Zobrist::PieceInfo[enemy][PieceType::Pawn][enPassantSquare
+                updatePstScore
+                    <Sub>(enemy, Eval::pieceSquareScore(pieceInfo(enemy, pieceType::Pawn), enPassantSquare + 8));
+                zobrist ^= Zobrist::pieceInfo[enemy][pieceType::Pawn][enPassantSquare
                     + 8];        
                 }
 
             pieces[enemy] ^= piece;
-            bitBoardSet[enemy][PieceType::Pawn] ^= piece;
-            OccupiedSquares ^= FromTo ^ piece;
-            EmptySquares ^= FromTo ^ piece;
+            bitBoardSet[enemy][pieceType::Pawn] ^= piece;
+            occupiedSquares ^= FromTo ^ piece;
+            emptySquares ^= FromTo ^ piece;
 
-            pawnsOnFile[sideToMove][Square::GetFileIndex(from)]--;
-            pawnsOnFile[sideToMove][Square::GetFileIndex(to)]++;
-            pawnsOnFile[enemy][Square::GetFileIndex(to)]--;
+            pawnsOnFile[sideToMove][Square::getFileIndex(from)]--;
+            pawnsOnFile[sideToMove][Square::getFileIndex(to)]++;
+            pawnsOnFile[enemy][Square::getFileIndex(to)]--;
             }
         else
             {
-            if (captured == PieceType::Rook)
+            if (captured == pieceType::Rook)
                 {
-                if (enemy == PieceColor::White)
+                if (enemy == pieceColor::White)
                     {
                     if (to == Square::H1)
-                        castlingStatus &= ~Castle::WhiteCastleOO;
+                        castlingStatus &= ~Castle::whiteCastleOO;
 
                     else if (to == Square::A1)
-                        castlingStatus &= ~Castle::WhiteCastleOOO;
+                        castlingStatus &= ~Castle::whiteCastleOOO;
                     }
                 else
                     {
                     if (to == Square::H8)
-                        castlingStatus &= ~Castle::BlackCastleOO;
+                        castlingStatus &= ~Castle::blackCastleOO;
 
                     else if (to == Square::A8)
-                        castlingStatus &= ~Castle::BlackCastleOOO;
+                        castlingStatus &= ~Castle::blackCastleOOO;
                     }
                 }
-            else if (captured == PieceType::Pawn)
+            else if (captured == pieceType::Pawn)
                 {
-                pawnsOnFile[enemy][Square::GetFileIndex(to)]--;
+                pawnsOnFile[enemy][Square::getFileIndex(to)]--;
                 }
 
-            if (pieceMoved == PieceType::Pawn)
+            if (pieceMoved == pieceType::Pawn)
                 {
-                pawnsOnFile[sideToMove][Square::GetFileIndex(from)]--;
-                pawnsOnFile[sideToMove][Square::GetFileIndex(to)]++;
+                pawnsOnFile[sideToMove][Square::getFileIndex(from)]--;
+                pawnsOnFile[sideToMove][Square::getFileIndex(to)]++;
                 }
 
-            updatePstvalue<Sub>(enemy, Eval::PieceSquareValue(PieceInfo(enemy, captured), to));
+            updatePstScore<Sub>(enemy, Eval::pieceSquareScore(pieceInfo(enemy, captured), to));
             bitBoardSet[enemy][captured] ^= To;
             pieces[enemy] ^= To;    
-            OccupiedSquares ^= From;
-            EmptySquares ^= From;
-            zobrist ^= Zobrist::PieceInfo[enemy][captured][to];     
+            occupiedSquares ^= From;
+            emptySquares ^= From;
+            zobrist ^= Zobrist::pieceInfo[enemy][captured][to];     
             }
 
-        numOfPieces[enemy][captured]--;
-        material[enemy] -= PieceValue[captured];
+        numPieces[enemy][captured]--;
+        material[enemy] -= pieceValue[captured];
         incrementClock = false;             
         }
     else
         {
-        OccupiedSquares ^= FromTo;
-        EmptySquares ^= FromTo;
+        occupiedSquares ^= FromTo;
+        emptySquares ^= FromTo;
         }
 
-    if (enPassantSquare != Square::None)
-        zobrist ^= Zobrist::Enpassant[Square::GetFileIndex(enPassantSquare)];
+    if (enPassantSquare != Square::noSquare)
+        zobrist ^= Zobrist::Enpassant[Square::getFileIndex(enPassantSquare)];
 
-    enPassantSquare = Square::None;
+    enPassantSquare = Square::noSquare;
 
-    if (pieceMoved == PieceType::Pawn)
+    if (pieceMoved == pieceType::Pawn)
         {
         incrementClock = false;                
         int sq = to - from;           
@@ -397,7 +397,7 @@ void Position::MakeMove( Move move )
         if (sq == 16 || sq == -16)     
             {
             enPassantSquare = to - sq / 2;
-            zobrist ^= Zobrist::Enpassant[Square::GetFileIndex(enPassantSquare)];
+            zobrist ^= Zobrist::Enpassant[Square::getFileIndex(enPassantSquare)];
             }
         }
 
@@ -413,12 +413,12 @@ void Position::MakeMove( Move move )
     currentPly++;
     }
 
-void Position::UndoMove( Move move )
+void Position::undoMove(Move move)
     {
-    uint8_t from = move.FromSquare();
-    uint8_t to = move.ToSquare();
+    uint8_t from = move.fromSquare();
+    uint8_t to = move.toSquare();
     uint8_t enemy = sideToMove;
-    bool promotion = move.IsPromotion();
+    bool promotion = move.isPromotion();
     bool capture;
     uint8_t promoted;
     uint8_t captured;
@@ -427,158 +427,158 @@ void Position::UndoMove( Move move )
     currentPly--;
 
     captured = capturedPieceHistory[currentPly];
-    capture = captured != PieceType::None;
+    capture = captured != pieceType::noType;
 
     zobrist ^= Zobrist::Color;                             
 
     if (castlingStatusHistory[currentPly] != castlingStatus)
         zobrist ^= Zobrist::Castling[castlingStatus];      
 
-    if (enPassantSquare != Square::None)
-        zobrist ^= Zobrist::Enpassant[Square::GetFileIndex(enPassantSquare)];
+    if (enPassantSquare != Square::noSquare)
+        zobrist ^= Zobrist::Enpassant[Square::getFileIndex(enPassantSquare)];
 
-    if (enpSquaresHistory[currentPly] != Square::None)
-        zobrist ^= Zobrist::Enpassant[Square::GetFileIndex(enpSquaresHistory[currentPly])];
+    if (enpSquaresHistory[currentPly] != Square::noSquare)
+        zobrist ^= Zobrist::Enpassant[Square::getFileIndex(enpSquaresHistory[currentPly])];
 
     halfMoveClock = halfMoveClockHistory[currentPly];
 
     if (promotion)
-        pieceMoved = PieceType::Pawn;
+        pieceMoved = pieceType::Pawn;
     else
         pieceMoved = pieceSet[to].Type;
 
-    sideToMove = Piece::GetOpposite(sideToMove);
+    sideToMove = Piece::getOpposite(sideToMove);
 
     pieceSet[from] = pieceSet[to];    
 
     if (!promotion)
         {
-        updatePstvalue<Sub>(sideToMove, Eval::PieceSquareValue(PieceInfo(sideToMove, pieceMoved), to));
-        updatePstvalue<Add>(sideToMove, Eval::PieceSquareValue(PieceInfo(sideToMove, pieceMoved), from));
+        updatePstScore<Sub>(sideToMove, Eval::pieceSquareScore(pieceInfo(sideToMove, pieceMoved), to));
+        updatePstScore<Add>(sideToMove, Eval::pieceSquareScore(pieceInfo(sideToMove, pieceMoved), from));
         }
 
-    uint64_t From = Masks::SquareMask[from];
-    uint64_t To = Masks::SquareMask[to];
+    uint64_t From = Masks::squareMask[from];
+    uint64_t To = Masks::squareMask[to];
     uint64_t FromTo = From | To;
 
     bitBoardSet[sideToMove][pieceMoved] ^= FromTo;
-    zobrist ^= Zobrist::PieceInfo[sideToMove][pieceMoved][from];        
-    zobrist ^= Zobrist::PieceInfo[sideToMove][pieceMoved][to];          
+    zobrist ^= Zobrist::pieceInfo[sideToMove][pieceMoved][from];        
+    zobrist ^= Zobrist::pieceInfo[sideToMove][pieceMoved][to];          
 
     pieces[sideToMove] ^= FromTo;
 
-    if (pieceMoved == PieceType::King)
+    if (pieceMoved == pieceType::King)
         {
         kingSquare[sideToMove] = from;
 
-        if (move.IsCastle())
+        if (move.isCastle())
             {
             undoCastle(from, to);
             }
 
         castlingStatus = castlingStatusHistory[currentPly];         
         }
-    else if (pieceMoved == PieceType::Rook)
+    else if (pieceMoved == pieceType::Rook)
         {
         castlingStatus = castlingStatusHistory[currentPly];
         }
     else if (promotion)
         {
-        promoted = move.PiecePromoted();
-        numOfPieces[sideToMove][PieceType::Pawn]++;
-        numOfPieces[sideToMove][promoted]--;
+        promoted = move.piecePromoted();
+        numPieces[sideToMove][pieceType::Pawn]++;
+        numPieces[sideToMove][promoted]--;
 
-        material[sideToMove] += PieceValue[PieceType::Pawn];
-        material[sideToMove] -= PieceValue[promoted];
-        pieceSet[from] = PieceInfo(sideToMove, PieceType::Pawn);
+        material[sideToMove] += pieceValue[pieceType::Pawn];
+        material[sideToMove] -= pieceValue[promoted];
+        pieceSet[from] = pieceInfo(sideToMove, pieceType::Pawn);
         bitBoardSet[sideToMove][promoted] ^= To;
-        bitBoardSet[sideToMove][PieceType::Pawn] ^= To;
-        zobrist ^= Zobrist::PieceInfo[sideToMove][PieceType::Pawn][to];
-        zobrist ^= Zobrist::PieceInfo[sideToMove][promoted][to];
-        updatePstvalue<Add>(sideToMove, Eval::PieceSquareValue(PieceInfo(sideToMove, PieceType::Pawn), from));
-        updatePstvalue<Sub>(sideToMove, Eval::PieceSquareValue(PieceInfo(sideToMove, promoted), to));
+        bitBoardSet[sideToMove][pieceType::Pawn] ^= To;
+        zobrist ^= Zobrist::pieceInfo[sideToMove][pieceType::Pawn][to];
+        zobrist ^= Zobrist::pieceInfo[sideToMove][promoted][to];
+        updatePstScore<Add>(sideToMove, Eval::pieceSquareScore(pieceInfo(sideToMove, pieceType::Pawn), from));
+        updatePstScore<Sub>(sideToMove, Eval::pieceSquareScore(pieceInfo(sideToMove, promoted), to));
 
         if (!capture)
-            pawnsOnFile[sideToMove][Square::GetFileIndex(from)]++;
+            pawnsOnFile[sideToMove][Square::getFileIndex(from)]++;
         else
-            pawnsOnFile[sideToMove][Square::GetFileIndex(to)]++;
+            pawnsOnFile[sideToMove][Square::getFileIndex(to)]++;
         }
 
     enPassantSquare = enpSquaresHistory[currentPly];
 
     if (capture)
         {
-        if (move.IsEnPassant())
+        if (move.isEnPassant())
             {
             pieceSet[to] = Null;           
             uint64_t piece;
 			const uint8_t offset = 8;
 
-            if (sideToMove == PieceColor::White)
+            if (sideToMove == pieceColor::White)
                 {
-                piece = Masks::SquareMask[enPassantSquare - offset];
-                pieceSet[enPassantSquare - offset] = PieceInfo(PieceColor::Black, PieceType::Pawn);
-                updatePstvalue <Add>(enemy, Eval::PieceSquareValue(PieceInfo(enemy, PieceType::Pawn), enPassantSquare - offset));
-                zobrist ^= Zobrist::PieceInfo[enemy][PieceType::Pawn][enPassantSquare - offset];
+                piece = Masks::squareMask[enPassantSquare - offset];
+                pieceSet[enPassantSquare - offset] = pieceInfo(pieceColor::Black, pieceType::Pawn);
+                updatePstScore <Add>(enemy, Eval::pieceSquareScore(pieceInfo(enemy, pieceType::Pawn), enPassantSquare - offset));
+                zobrist ^= Zobrist::pieceInfo[enemy][pieceType::Pawn][enPassantSquare - offset];
                 }
             else
                 {
-                piece = Masks::SquareMask[enPassantSquare + offset];
-                pieceSet[enPassantSquare + offset] = PieceInfo(PieceColor::White, PieceType::Pawn);
-                updatePstvalue <Add>(enemy, Eval::PieceSquareValue(PieceInfo(enemy, PieceType::Pawn), enPassantSquare + offset));
-                zobrist ^= Zobrist::PieceInfo[enemy][PieceType::Pawn][enPassantSquare + offset];
+                piece = Masks::squareMask[enPassantSquare + offset];
+                pieceSet[enPassantSquare + offset] = pieceInfo(pieceColor::White, pieceType::Pawn);
+                updatePstScore <Add>(enemy, Eval::pieceSquareScore(pieceInfo(enemy, pieceType::Pawn), enPassantSquare + offset));
+                zobrist ^= Zobrist::pieceInfo[enemy][pieceType::Pawn][enPassantSquare + offset];
                 }
 
             pieces[enemy] ^= piece;
-            bitBoardSet[enemy][PieceType::Pawn] ^= piece;
-            OccupiedSquares ^= FromTo ^ piece;
-            EmptySquares ^= FromTo ^ piece;
+            bitBoardSet[enemy][pieceType::Pawn] ^= piece;
+            occupiedSquares ^= FromTo ^ piece;
+            emptySquares ^= FromTo ^ piece;
 
-            pawnsOnFile[sideToMove][Square::GetFileIndex(from)]++;
-            pawnsOnFile[sideToMove][Square::GetFileIndex(to)]--;
-            pawnsOnFile[enemy][Square::GetFileIndex(to)]++;
+            pawnsOnFile[sideToMove][Square::getFileIndex(from)]++;
+            pawnsOnFile[sideToMove][Square::getFileIndex(to)]--;
+            pawnsOnFile[enemy][Square::getFileIndex(to)]++;
             }
         else
             {
-            if (captured == PieceType::Rook)
+            if (captured == pieceType::Rook)
                 {
                 castlingStatus = castlingStatusHistory[currentPly];
                 }
-            else if (captured == PieceType::Pawn)
+            else if (captured == pieceType::Pawn)
                 {
-                pawnsOnFile[enemy][Square::GetFileIndex(to)]++;
+                pawnsOnFile[enemy][Square::getFileIndex(to)]++;
                 }
 
-            if (pieceMoved == PieceType::Pawn)
+            if (pieceMoved == pieceType::Pawn)
                 {
-                pawnsOnFile[sideToMove][Square::GetFileIndex(from)]++;
-                pawnsOnFile[sideToMove][Square::GetFileIndex(to)]--;
+                pawnsOnFile[sideToMove][Square::getFileIndex(from)]++;
+                pawnsOnFile[sideToMove][Square::getFileIndex(to)]--;
                 }
 
-            updatePstvalue<Add>(enemy, Eval::PieceSquareValue(PieceInfo(enemy, captured), to));
+            updatePstScore<Add>(enemy, Eval::pieceSquareScore(pieceInfo(enemy, captured), to));
 
-            pieceSet[to] = PieceInfo(enemy, captured);
+            pieceSet[to] = pieceInfo(enemy, captured);
             bitBoardSet[enemy][captured] ^= To;
 
             pieces[enemy] ^= To;    
-            OccupiedSquares ^= From;
-            EmptySquares ^= From;
+            occupiedSquares ^= From;
+            emptySquares ^= From;
 
-            zobrist ^= Zobrist::PieceInfo[enemy][captured][to];     
+            zobrist ^= Zobrist::pieceInfo[enemy][captured][to];     
             }
 
-        numOfPieces[enemy][captured]++;
-        material[enemy] += PieceValue[captured];
+        numPieces[enemy][captured]++;
+        material[enemy] += pieceValue[captured];
         }
     else
         {
         pieceSet[to] = Null;
-        OccupiedSquares ^= FromTo;
-        EmptySquares ^= FromTo;
+        occupiedSquares ^= FromTo;
+        emptySquares ^= FromTo;
         }
     }
 
-void Position::makeCastle( uint8_t from, uint8_t to )
+void Position::makeCastle(uint8_t from, uint8_t to)
     {
     uint64_t rook;
     uint8_t fromR;
@@ -586,7 +586,7 @@ void Position::makeCastle( uint8_t from, uint8_t to )
 
     if (from < to)   
         {
-        if (sideToMove == PieceColor::White)
+        if (sideToMove == pieceColor::White)
             {
             fromR = Square::H1;
             toR = Square::F1;
@@ -599,7 +599,7 @@ void Position::makeCastle( uint8_t from, uint8_t to )
         }
     else   
         {
-        if (sideToMove == PieceColor::White)
+        if (sideToMove == pieceColor::White)
             {
             fromR = Square::A1;
             toR = Square::D1;
@@ -611,23 +611,23 @@ void Position::makeCastle( uint8_t from, uint8_t to )
             }
         }
 
-    rook = Masks::SquareMask[fromR] | Masks::SquareMask[toR];
+    rook = Masks::squareMask[fromR] | Masks::squareMask[toR];
     pieces[sideToMove] ^= rook;
-    bitBoardSet[sideToMove][PieceType::Rook] ^= rook;
-    OccupiedSquares ^= rook;
-    EmptySquares ^= rook;
+    bitBoardSet[sideToMove][pieceType::Rook] ^= rook;
+    occupiedSquares ^= rook;
+    emptySquares ^= rook;
     pieceSet[fromR] = Null;                         
-    pieceSet[toR] = PieceInfo(sideToMove, PieceType::Rook);    
+    pieceSet[toR] = pieceInfo(sideToMove, pieceType::Rook);    
 
-    updatePstvalue<Sub>(sideToMove, Eval::PieceSquareValue(PieceInfo(sideToMove, PieceType::Rook), fromR));
-    updatePstvalue<Add>(sideToMove, Eval::PieceSquareValue(PieceInfo(sideToMove, PieceType::Rook), toR));
+    updatePstScore<Sub>(sideToMove, Eval::pieceSquareScore(pieceInfo(sideToMove, pieceType::Rook), fromR));
+    updatePstScore<Add>(sideToMove, Eval::pieceSquareScore(pieceInfo(sideToMove, pieceType::Rook), toR));
 
-    zobrist ^= Zobrist::PieceInfo[sideToMove][PieceType::Rook][fromR];
-    zobrist ^= Zobrist::PieceInfo[sideToMove][PieceType::Rook][toR];
+    zobrist ^= Zobrist::pieceInfo[sideToMove][pieceType::Rook][fromR];
+    zobrist ^= Zobrist::pieceInfo[sideToMove][pieceType::Rook][toR];
     castled[sideToMove] = true;
     }
 
-void Position::undoCastle( uint8_t from, uint8_t to )
+void Position::undoCastle(uint8_t from, uint8_t to)
     {
     uint64_t rook;
     uint8_t fromR;
@@ -635,7 +635,7 @@ void Position::undoCastle( uint8_t from, uint8_t to )
 
     if (from < to)   
         {
-        if (sideToMove == PieceColor::White)
+        if (sideToMove == pieceColor::White)
             {
             fromR = Square::H1;
             toR = Square::F1;
@@ -648,7 +648,7 @@ void Position::undoCastle( uint8_t from, uint8_t to )
         }
     else   
         {
-        if (sideToMove == PieceColor::White)
+        if (sideToMove == pieceColor::White)
             {
             fromR = Square::A1;
             toR = Square::D1;
@@ -660,86 +660,86 @@ void Position::undoCastle( uint8_t from, uint8_t to )
             }
         }
 
-    rook = Masks::SquareMask[fromR] | Masks::SquareMask[toR];
+    rook = Masks::squareMask[fromR] | Masks::squareMask[toR];
     pieces[sideToMove] ^= rook;
-    bitBoardSet[sideToMove][PieceType::Rook] ^= rook;
-    OccupiedSquares ^= rook;
-    EmptySquares ^= rook;
-    pieceSet[fromR] = PieceInfo(sideToMove, PieceType::Rook);    
+    bitBoardSet[sideToMove][pieceType::Rook] ^= rook;
+    occupiedSquares ^= rook;
+    emptySquares ^= rook;
+    pieceSet[fromR] = pieceInfo(sideToMove, pieceType::Rook);    
     pieceSet[toR] = Null;                             
 
-    updatePstvalue<Add>(sideToMove, Eval::PieceSquareValue(PieceInfo(sideToMove, PieceType::Rook), fromR));
-    updatePstvalue<Sub>(sideToMove, Eval::PieceSquareValue(PieceInfo(sideToMove, PieceType::Rook), toR));
+    updatePstScore<Add>(sideToMove, Eval::pieceSquareScore(pieceInfo(sideToMove, pieceType::Rook), fromR));
+    updatePstScore<Sub>(sideToMove, Eval::pieceSquareScore(pieceInfo(sideToMove, pieceType::Rook), toR));
 
     castlingStatus = castlingStatusHistory[currentPly];         
 
-    zobrist ^= Zobrist::PieceInfo[sideToMove][PieceType::Rook][fromR];
-    zobrist ^= Zobrist::PieceInfo[sideToMove][PieceType::Rook][toR];
+    zobrist ^= Zobrist::pieceInfo[sideToMove][pieceType::Rook][fromR];
+    zobrist ^= Zobrist::pieceInfo[sideToMove][pieceType::Rook][toR];
     castled[sideToMove] = false;
     }
 
-bool Position::IsAttacked( uint64_t target, uint8_t side ) const
+bool Position::isAttacked(uint64_t target, uint8_t side) const
     {
     uint64_t slidingAttackers;
     uint64_t pawnAttacks;
-    uint8_t enemyColor = Piece::GetOpposite(side);
+    uint8_t enemyColor = Piece::getOpposite(side);
     uint8_t to;
 
     while (target != 0)
         {
-        to = BitScanForwardReset(target);
-        pawnAttacks = Moves::PawnAttacks[side][to];
+        to = bitScanForwardReset(target);
+        pawnAttacks = Moves::pawnAttacks[side][to];
 
-        if ((Pieces(enemyColor, PieceType::Pawn) & pawnAttacks) != 0)
+        if ((Pieces(enemyColor, pieceType::Pawn) & pawnAttacks) != 0)
             return true;
 
-        if ((Pieces(enemyColor, PieceType::Knight) & Moves::KnightAttacks[to]) != 0)
+        if ((Pieces(enemyColor, pieceType::Knight) & Moves::knightAttacks[to]) != 0)
             return true;
 
-        if ((Pieces(enemyColor, PieceType::King) & Moves::KingAttacks[to]) != 0)
+        if ((Pieces(enemyColor, pieceType::King) & Moves::kingAttacks[to]) != 0)
             return true;
 
-        slidingAttackers = Pieces(enemyColor, PieceType::Queen) | Pieces(enemyColor, PieceType::Rook);
+        slidingAttackers = Pieces(enemyColor, pieceType::Queen) | Pieces(enemyColor, pieceType::Rook);
 
         if (slidingAttackers != 0)
             {
 #ifdef PEXT
-            if ((Moves::GetRookAttacks(OccupiedSquares, to) & slidingAttackers) != 0)
+            if ((Moves::getRookAttacks(occupiedSquares, to) & slidingAttackers) != 0)
                 return true;
 #else
-            if ((Moves::GetRankAttacks(OccupiedSquares, to) & slidingAttackers) != 0)
+            if ((Moves::getRankAttacks(occupiedSquares, to) & slidingAttackers) != 0)
                 return true;
 
-            if ((Moves::GetFileAttacks(OccupiedSquares, to) & slidingAttackers) != 0)
+            if ((Moves::getFileAttacks(occupiedSquares, to) & slidingAttackers) != 0)
                 return true;
 #endif
             }
 
-        slidingAttackers = Pieces(enemyColor, PieceType::Queen) | Pieces(enemyColor, PieceType::Bishop);
+        slidingAttackers = Pieces(enemyColor, pieceType::Queen) | Pieces(enemyColor, pieceType::Bishop);
 
         if (slidingAttackers != 0)
             {
-            if ((Moves::GetH1A8DiagonalAttacks(OccupiedSquares, to) & slidingAttackers) != 0)
+            if ((Moves::getH1A8DiagonalAttacks(occupiedSquares, to) & slidingAttackers) != 0)
                 return true;
 
-            if ((Moves::GetA1H8DiagonalAttacks(OccupiedSquares, to) & slidingAttackers) != 0)
+            if ((Moves::getA1H8DiagonalAttacks(occupiedSquares, to) & slidingAttackers) != 0)
                 return true;
             }
         }
     return false;
     }
 
-std::string Position::GetFen() const
+std::string Position::getFen() const
     {
     std::string fen = "";
 
-    for ( int r = 7; r >= 0; r-- )
+    for (int r = 7; r >= 0; r--)
         {
         int empty = 0;
 
-        for ( int c = 0; c < 8; c++ )
+        for (int c = 0; c < 8; c++)
             {
-            if (pieceSet[Square::GetSquareIndex(c, r)].Type == PieceType::None)
+            if (pieceSet[Square::getSquareIndex(c, r)].Type == pieceType::noType)
                 empty++;
             else
                 {
@@ -749,7 +749,7 @@ std::string Position::GetFen() const
                     empty = 0;
                     }
 
-                fen += Piece::GetInitial(pieceSet[Square::GetSquareIndex(c, r)]);
+                fen += Piece::getInitial(pieceSet[Square::getSquareIndex(c, r)]);
                 }
             }
 
@@ -762,7 +762,7 @@ std::string Position::GetFen() const
 
     fen += " ";
 
-    if (sideToMove == PieceColor::White)
+    if (sideToMove == pieceColor::White)
         fen += "w";
     else
         fen += "b";
@@ -771,18 +771,18 @@ std::string Position::GetFen() const
 
     if (castlingStatus)
         {
-        fen += (castlingStatus & Castle::WhiteCastleOO ? "K" : "");
-        fen += (castlingStatus & Castle::WhiteCastleOOO ? "Q" : "");
-        fen += (castlingStatus & Castle::BlackCastleOO ? "k" : "");
-        fen += (castlingStatus & Castle::BlackCastleOOO ? "q" : "");
+        fen += (castlingStatus & Castle::whiteCastleOO ? "K" : "");
+        fen += (castlingStatus & Castle::whiteCastleOOO ? "Q" : "");
+        fen += (castlingStatus & Castle::blackCastleOO ? "k" : "");
+        fen += (castlingStatus & Castle::blackCastleOOO ? "q" : "");
         }
     else
         fen += '-';
 
     fen += " ";
 
-    if (enPassantSquare != Square::None)
-        fen += Square::ToAlgebraic(enPassantSquare);
+    if (enPassantSquare != Square::noSquare)
+        fen += Square::toAlgebraic(enPassantSquare);
     else
         fen += '-';
 
@@ -794,22 +794,17 @@ std::string Position::GetFen() const
 
 void Position::Display() const
 	{
-	PieceInfo piece;
+	pieceInfo piece;
 
 	for (int r = 7; r >= 0; r--)
 		{
 		for (int c = 0; c <= 7; c++)
 			{
-			piece = pieceSet[Square::GetSquareIndex(c, r)];
-			std::cout << '[';
-			if (piece.Type != PieceType::None)
-				{
-				std::cout << Piece::GetColor(pieceSet[Square::GetSquareIndex(c, r)].Color);
-				std::cout << Piece::GetType(pieceSet[Square::GetSquareIndex(c, r)].Type);
-				}
+			piece = pieceSet[Square::getSquareIndex(c, r)];
+			if (piece.Type != pieceType::noType)
+				std::cout << Piece::getInitial(piece);
 			else
-				std::cout << "  ";
-			std::cout << ']';
+				std::cout << "-";
 			}
 		std::cout << std::endl;
 		}

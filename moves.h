@@ -6,35 +6,35 @@
 class Moves
     {
     public:
-    static uint64_t PawnAttacks[2][64];      // color, square
-    static uint64_t KingAttacks[64];         // square
-    static uint64_t KnightAttacks[64];       // square
-    static uint64_t PseudoRookAttacks[64];   // square
-    static uint64_t PseudoBishopAttacks[64]; // square
-    static uint64_t ObstructedTable[64][64]; // square, square
-    static uint64_t KingProximity[2][64];    // color, square
-    static uint64_t SideFiles[8];            // file
-    static uint64_t FrontSpan[2][64];        // color, square
-    static uint64_t PasserSpan[2][64];       // color, square
+    static uint64_t pawnAttacks[2][64];      // color, square
+    static uint64_t kingAttacks[64];         // square
+    static uint64_t knightAttacks[64];       // square
+    static uint64_t pseudoRookAttacks[64];   // square
+    static uint64_t pseudoBishopAttacks[64]; // square
+    static uint64_t obstructedTable[64][64]; // square, square
+    static uint64_t kingProximity[2][64];    // color, square
+    static uint64_t adjacentFiles[8];		 // file
+    static uint64_t frontSpan[2][64];        // color, square
+    static uint64_t passerSpan[2][64];       // color, square
     static int Distance[64][64];             // square, square
-    static uint64_t GetA1H8DiagonalAttacks(uint64_t, uint8_t);
-    static uint64_t GetH1A8DiagonalAttacks(uint64_t, uint8_t);
-    static bool AreSquareAligned(uint8_t, uint8_t, uint8_t);
-    static void InitAttacks();
+    static uint64_t getA1H8DiagonalAttacks(uint64_t, uint8_t);
+    static uint64_t getH1A8DiagonalAttacks(uint64_t, uint8_t);
+    static bool AreSquaresAligned(uint8_t, uint8_t, uint8_t);
+    static void initAttacks();
 
 #ifdef PEXT
     static uint64_t RookAttacks[64][64 * 64]; // square, occupancy (12 bits)
-    static uint64_t GetRookAttacks(uint64_t, uint8_t);
+    static uint64_t getRookAttacks(uint64_t, uint8_t);
 #else
-    static uint64_t GetRankAttacks(uint64_t, uint8_t);
-    static uint64_t GetFileAttacks(uint64_t, uint8_t);
+    static uint64_t getRankAttacks(uint64_t, uint8_t);
+    static uint64_t getFileAttacks(uint64_t, uint8_t);
 #endif
 
     private:
-    static uint64_t RankAttacks[64][64];         // square , occupancy
-    static uint64_t FileAttacks[64][64];         // square , occupancy
-    static uint64_t A1H8DiagonalAttacks[64][64]; // square , occupancy
-    static uint64_t H1A8DiagonalAttacks[64][64]; // square , occupancy
+    static uint64_t rankAttacks[64][64];         // square , occupancy
+    static uint64_t fileAttacks[64][64];         // square , occupancy
+    static uint64_t A1H8diagonalAttacks[64][64]; // square , occupancy
+    static uint64_t H1A8diagonalAttacks[64][64]; // square , occupancy
 
     static void initPawnAttacks();
     static void initKnightAttacks();
@@ -53,52 +53,52 @@ class Moves
     };
 
 #ifdef PEXT
-INLINE uint64_t Moves::GetRookAttacks( uint64_t occupiedSquares, uint8_t square )
+INLINE uint64_t Moves::getRookAttacks(uint64_t occupiedSquares, uint8_t square)
     {
     auto pext = _pext_u64(occupiedSquares, Moves::RookMask[square]);
     return Moves::RookAttacks[square][pext];
     }
 #else
-INLINE uint64_t Moves::GetRankAttacks( uint64_t occupiedSquares, uint8_t square )
+INLINE uint64_t Moves::getRankAttacks(uint64_t occupiedSquares, uint8_t square)
     {
-    int rank = Square::GetRankIndex(square);
-    int occupancy = (int)((occupiedSquares & Masks::SixBitRankMask[rank]) >> (8 * rank));
-    return RankAttacks[square][(occupancy >> 1) & 63];
+    int rank = Square::getRankIndex(square);
+    int occupancy = (int)((occupiedSquares & Masks::sixBitRankMask[rank]) >> (8 * rank));
+    return rankAttacks[square][(occupancy >> 1) & 63];
     }
 
-INLINE uint64_t Moves::GetFileAttacks( uint64_t occupiedSquares, uint8_t square )
+INLINE uint64_t Moves::getFileAttacks(uint64_t occupiedSquares, uint8_t square)
     {
-    int file = Square::GetFileIndex(square);
-    int occupancy = (int)((occupiedSquares & Masks::SixBitFileMask[file]) * Magics::FileMagic[file] >> 56);
-    return FileAttacks[square][(occupancy >> 1) & 63];
+    int file = Square::getFileIndex(square);
+    int occupancy = (int)((occupiedSquares & Masks::sixBitFileMask[file]) * Magics::fileMagic[file] >> 56);
+    return fileAttacks[square][(occupancy >> 1) & 63];
     }
 #endif
 
-INLINE uint64_t Moves::GetA1H8DiagonalAttacks( uint64_t occupiedSquares, uint8_t square )
+INLINE uint64_t Moves::getA1H8DiagonalAttacks(uint64_t occupiedSquares, uint8_t square)
     {
-    int diag = Square::GetA1H8DiagonalIndex(square);
+    int diag = Square::getA1H8DiagonalIndex(square);
 
 #ifdef PEXT
-    auto occupancy = _pext_u64(occupiedSquares, Masks::SixBitA1H8DiagonalMask[diag]);
+    auto occupancy = _pext_u64(occupiedSquares, Masks::sixBitA1H8diagMask[diag]);
 #else
-    int occupancy = (int)((occupiedSquares & Masks::A1H8DiagonalMask[diag]) * Magics::A1H8DiagonalMagic[diag] >> 56);
+    int occupancy = (int)((occupiedSquares & Masks::A1H8diagMask[diag]) * Magics::A1H8diagMagic[diag] >> 56);
 #endif
-    return A1H8DiagonalAttacks[square][(occupancy >> 1) & 63];
+    return A1H8diagonalAttacks[square][(occupancy >> 1) & 63];
     }
 
-INLINE uint64_t Moves::GetH1A8DiagonalAttacks( uint64_t occupiedSquares, uint8_t square )
+INLINE uint64_t Moves::getH1A8DiagonalAttacks(uint64_t occupiedSquares, uint8_t square)
     {
-    int diag = Square::GetH1A8AntiDiagonalIndex(square);
+    int diag = Square::getH1A8AntiDiagonalIndex(square);
 #ifdef PEXT
-    auto occupancy = _pext_u64(occupiedSquares, Masks::SixBitH1A8DiagonalMask[diag]);
+    auto occupancy = _pext_u64(occupiedSquares, Masks::sixBitH1A8DdiagMask[diag]);
 #else
-    int occupancy = (int)((occupiedSquares & Masks::H1A8DiagonalMask[diag]) * Magics::H1A8DiagonalMagic[diag] >> 56);
+    int occupancy = (int)((occupiedSquares & Masks::H1A8diagMask[diag]) * Magics::H1A8diagMagic[diag] >> 56);
 #endif
-    return H1A8DiagonalAttacks[square][(occupancy >> 1) & 63];
+    return H1A8diagonalAttacks[square][(occupancy >> 1) & 63];
     }
 
-INLINE bool Moves::AreSquareAligned( uint8_t s1, uint8_t s2, uint8_t s3 )
+INLINE bool Moves::AreSquaresAligned(uint8_t s1, uint8_t s2, uint8_t s3)
     {
-    return (ObstructedTable[s1][s2] | ObstructedTable[s1][s3] | ObstructedTable[s2][s3])
-		& (Masks::SquareMask[s1] | Masks::SquareMask[s2] | Masks::SquareMask[s3]);
+    return (obstructedTable[s1][s2] | obstructedTable[s1][s3] | obstructedTable[s2][s3])
+		& (Masks::squareMask[s1] | Masks::squareMask[s2] | Masks::squareMask[s3]);
     }

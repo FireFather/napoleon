@@ -1,10 +1,10 @@
-#include "uci.h"
 #include "search.h"
 
 int main()
     {
-	Search::Hash.SetSize(32);
-	Search::InitializeThreads();
+	Uci::engineInfo();
+	Search::Hash.setSize(32);
+	Search::initThreads();
     Uci::Start();
     return 0;
     }

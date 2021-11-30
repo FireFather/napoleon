@@ -5,30 +5,31 @@ class MovePick
     {
     public:
     Position &position;
-    Move moves[MoveGen::MaxMoves];
+    Move moves[moveGen::maxMoves];
     Move hashMove;
     int count;
     MovePick(Position &, SearchInfo &);
+
     template <bool>
-    void Sort( int = 0 );
+    void Sort(int = 0);
     Move First();
     Move Next();
     void Reset();
-    Move & operator []( int );
+    Move & operator [](int);
     private:
-    int scores[MoveGen::MaxMoves];
+    int scores[moveGen::maxMoves];
     SearchInfo &info;
     int first;
     };
 
-inline Move &MovePick::operator []( int index )
+inline Move &MovePick::operator [](int index)
     {
     return moves[index];
     }
 
 inline Move MovePick::First()
     {
-    if (!hashMove.IsNull())
+    if (!hashMove.isNull())
         return hashMove;
     else
         return Next();
@@ -47,9 +48,9 @@ inline Move MovePick::Next()
     int max = first;
 
     if (max >= count)
-        return NullMove;
+        return nullMove;
 
-    for ( auto i = first+1; i < count; i++ )
+    for (auto i = first+1; i < count; i++)
         if (scores[i] > scores[max])
             max = i;
 
@@ -68,23 +69,23 @@ inline Move MovePick::Next()
     }
 
 template <bool quiesce>
-void MovePick::Sort( int ply )
+void MovePick::Sort(int ply)
     {
     int max = 0;
     int historyScore;
 
-    for ( auto i = 0; i < count; i++ )
+    for (auto i = 0; i < count; i++)
         {
-        if (moves[i].IsPromotion())
+        if (moves[i].isPromotion())
             {
-            scores[i] = PieceValue[moves[i].PiecePromoted()];
+            scores[i] = pieceValue[moves[i].piecePromoted()];
             }
-        else if (position.IsCapture(moves[i]))
+        else if (position.isCapture(moves[i]))
             {
             if (quiesce)
                 {
-                uint8_t captured = moves[i].IsEnPassant() ? uint8_t(PieceType::Pawn) : position.PieceOnSquare(moves[i].ToSquare()).Type;  
-                scores[i] = PieceValue[captured] - PieceValue[position.PieceOnSquare(moves[i].FromSquare()).Type];
+                uint8_t captured = moves[i].isEnPassant() ? uint8_t(pieceType::Pawn) : position.pieceOnSquare(moves[i].toSquare()).Type;  
+                scores[i] = pieceValue[captured] - pieceValue[position.pieceOnSquare(moves[i].fromSquare()).Type];
                 }
             else
                 {
@@ -92,19 +93,19 @@ void MovePick::Sort( int ply )
                 }
             }
 
-        else if (moves[i] == info.FirstKiller(ply))
+        else if (moves[i] == info.firstKiller(ply))
             scores[i] = -1;
 
-        else if (moves[i] == info.SecondKiller(ply))
+        else if (moves[i] == info.secondKiller(ply))
             scores[i] = -2;
 
-        else if ((historyScore = info.HistoryScore(moves[i], position.SideToMove())) > max)
+        else if ((historyScore = info.historyScore(moves[i], position.getSideToMove())) > max)
             max = historyScore;
         }
 
-    for ( auto i = 0; i < count; i++ )
+    for (auto i = 0; i < count; i++)
         {
-        if (!position.IsCapture(moves[i]) && moves[i] != info.FirstKiller(ply) && moves[i] != info.SecondKiller(ply))
-            scores[i] = info.HistoryScore(moves[i], position.SideToMove()) - max - 3;
+        if (!position.isCapture(moves[i]) && moves[i] != info.firstKiller(ply) && moves[i] != info.secondKiller(ply))
+            scores[i] = info.historyScore(moves[i], position.getSideToMove()) - max - 3;
         }
     }

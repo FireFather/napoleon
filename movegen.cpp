@@ -1,7 +1,7 @@
 #include "movegen.h"
 #include "piece.h"
 
-void MoveGen::GetQueenMoves( uint64_t queens, Position &position, Move moveList [], int &pos, uint64_t target )
+void moveGen::getQueenMoves(uint64_t queens, Position &position, Move moveList [], int &pos, uint64_t target)
     {
     uint64_t targets;
     uint8_t fromIndex;
@@ -9,12 +9,12 @@ void MoveGen::GetQueenMoves( uint64_t queens, Position &position, Move moveList 
 
     while (queens != 0)
         {
-        fromIndex = BitScanForwardReset(queens);        
-        targets = Queen::GetAllTargets(Masks::SquareMask[fromIndex], position) & target;
+        fromIndex = bitScanForwardReset(queens);        
+        targets = Queen::getAllTargets(Masks::squareMask[fromIndex], position) & target;
 
         while (targets != 0)
             {
-            toIndex = BitScanForwardReset(targets);        
+            toIndex = bitScanForwardReset(targets);        
             moveList[pos++] = Move(fromIndex, toIndex);
             }
         }

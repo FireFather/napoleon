@@ -1,7 +1,12 @@
 #pragma once
 #include "move.h"
 
-enum class ScoreType : uint8_t { Exact, Alpha, Beta };
+enum class ScoreType : uint8_t
+	{
+	Exact,
+	Alpha,
+	Beta
+	};
 
 class HashEntry
 	{
@@ -14,5 +19,4 @@ class HashEntry
 	HashEntry() noexcept;
 	HashEntry(uint64_t, uint8_t, int, Move, ScoreType);
     };
-
 

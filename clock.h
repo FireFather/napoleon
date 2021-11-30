@@ -9,10 +9,9 @@ class Clock
     {
     public:
     Clock() noexcept;
-    void Restart();
-    double ElapsedMilliseconds();
-    double ElapsedSeconds();
-    static Clock StartNew();
+	void Restart();
+	double elapsedMilliseconds();
+	static Clock startNow();
 
     private:
     t_clock::time_point begin;

@@ -6,87 +6,90 @@
 #include "piece.h"
 #include "castle.h"
 
-namespace MoveGen
+namespace moveGen
     {
-    int MoveCount(Position &);
+	int moveCount(Position &);
+
     template <bool>
-    void GetPseudoLegalMoves( Move allMoves [], int &pos, uint64_t attackers, Position &position );
-    void GetLegalMoves(Move allMoves [], int & pos, Position & position);
-    void GetAllMoves(Move allMoves [], int & pos, Position & position);
+	void getPseudoLegalMoves(Move allMoves [], int &pos, uint64_t attackers, Position &position);
+	void getLegalMoves(Move allMoves [], int & pos, Position & position);
+	void getAllMoves(Move allMoves [], int & pos, Position & position);
+
     template <bool>
-    void GetPawnMoves( uint64_t pawns, Position &position, Move moveList [], int &pos, uint64_t target );
-    void GetKingMoves(uint64_t king, Position & position, Move moveList [], int & pos, uint64_t target);
-    void GetKnightMoves(uint64_t knights, Position & position, Move moveList [], int & pos, uint64_t target);
-    void GetRookMoves(uint64_t rooks, Position & position, Move moveList [], int & pos, uint64_t target);
-    void GetBishopMoves(uint64_t bishops, Position & position, Move moveList [], int & pos, uint64_t target);
-    void GetQueenMoves(uint64_t queens, Position & position, Move moveList [], int & pos, uint64_t target);
-    void GetCastleMoves(Position & position, Move moveList [], int & pos);
+	void getPawnMoves(uint64_t pawns, Position &position, Move moveList [], int &pos, uint64_t target);
+	void getKingMoves(uint64_t king, Position & position, Move moveList [], int & pos, uint64_t target);
+	void getKnightMoves(uint64_t knights, Position & position, Move moveList [], int & pos, uint64_t target);
+	void getRookMoves(uint64_t rooks, Position & position, Move moveList [], int & pos, uint64_t target);
+	void getBishopMoves(uint64_t bishops, Position & position, Move moveList [], int & pos, uint64_t target);
+	void getQueenMoves(uint64_t queens, Position & position, Move moveList [], int & pos, uint64_t target);
+	void getCastleMoves(Position & position, Move moveList [], int & pos);
+
     template <bool>
-    void GetEvadeMoves( Position &position, uint64_t attackers, Move moveList [], int &pos );
-    void GetCaptures(Move allMoves [], int & pos, Position & position);
-    void GetNonCaptures(Move allMoves [], int & pos, Position & position);
-    const int MaxMoves = 256;
+    void getEvadeMoves(Position &position, uint64_t attackers, Move moveList [], int &pos);
+	void getCaptures(Move allMoves [], int & pos, Position & position);
+	void getNonCaptures(Move allMoves [], int & pos, Position & position);
+    const int maxMoves = 256;
     }
 
-inline int MoveGen::MoveCount( Position &position )
+INLINE int moveGen::moveCount(Position &position)
     {
     int count = 0;
-    Move moves[MaxMoves];
-    GetLegalMoves(moves, count, position);
+    Move moves[maxMoves];
+    getLegalMoves(moves, count, position);
     return count;
     }
 
 template <bool onlyCaptures>
-INLINE void MoveGen::GetPseudoLegalMoves( Move allMoves [], int &pos, uint64_t attackers, Position &position )
+INLINE void moveGen::getPseudoLegalMoves(Move allMoves [], int &pos, uint64_t attackers, Position &position)
     {
     if (attackers)
         {
-        GetEvadeMoves<onlyCaptures>(position, attackers, allMoves, pos);
-        position.SetCheckState(true);
+        getEvadeMoves<onlyCaptures>(position, attackers, allMoves, pos);
+        position.setCheckState(true);
         }
     else if (onlyCaptures)
         {
-        GetCaptures(allMoves, pos, position);
-        position.SetCheckState(false);
+        getCaptures(allMoves, pos, position);
+        position.setCheckState(false);
         }
     else
         {
-        GetAllMoves(allMoves, pos, position);
-        position.SetCheckState(false);
+        getAllMoves(allMoves, pos, position);
+        position.setCheckState(false);
         }
     }
 
-INLINE void MoveGen::GetAllMoves( Move allMoves [], int &pos, Position &position )
+INLINE void moveGen::getAllMoves(Move allMoves [], int &pos, Position &position)
     {
-    GetCaptures(allMoves, pos, position);
-    GetNonCaptures(allMoves, pos, position);
+    getCaptures(allMoves, pos, position);
+    getNonCaptures(allMoves, pos, position);
     }
 
-INLINE void MoveGen::GetCaptures( Move allMoves [], int &pos, Position &position )
+INLINE void moveGen::getCaptures(Move allMoves [], int &pos, Position &position)
     {
-    uint64_t enemy = position.EnemyPieces();
-    GetPawnMoves<true>(position.Pieces(position.SideToMove(), PieceType::Pawn), position, allMoves, pos, enemy);
-    GetKnightMoves(position.Pieces(position.SideToMove(), PieceType::Knight), position, allMoves, pos, enemy);
-    GetBishopMoves(position.Pieces(position.SideToMove(), PieceType::Bishop), position, allMoves, pos, enemy);
-    GetQueenMoves(position.Pieces(position.SideToMove(), PieceType::Queen), position, allMoves, pos, enemy);
-    GetKingMoves(position.Pieces(position.SideToMove(), PieceType::King), position, allMoves, pos, enemy);
-    GetRookMoves(position.Pieces(position.SideToMove(), PieceType::Rook), position, allMoves, pos, enemy);
+    uint64_t enemy = position.enemyPieces();
+    getPawnMoves<true>(position.Pieces(position.getSideToMove(), pieceType::Pawn), position, allMoves, pos, enemy);
+    getKnightMoves(position.Pieces(position.getSideToMove(), pieceType::Knight), position, allMoves, pos, enemy);
+    getBishopMoves(position.Pieces(position.getSideToMove(), pieceType::Bishop), position, allMoves, pos, enemy);
+    getQueenMoves(position.Pieces(position.getSideToMove(), pieceType::Queen), position, allMoves, pos, enemy);
+    getKingMoves(position.Pieces(position.getSideToMove(), pieceType::King), position, allMoves, pos, enemy);
+    getRookMoves(position.Pieces(position.getSideToMove(), pieceType::Rook), position, allMoves, pos, enemy);
     }
 
-INLINE void MoveGen::GetNonCaptures( Move allMoves [], int &pos, Position &position )
+INLINE void moveGen::getNonCaptures(Move allMoves [], int &pos, Position &position)
     {
-    uint64_t enemy = ~position.EnemyPieces();
-    GetPawnMoves<false>(position.Pieces(position.SideToMove(), PieceType::Pawn), position, allMoves, pos, enemy);
-    GetKnightMoves(position.Pieces(position.SideToMove(), PieceType::Knight), position, allMoves, pos, enemy);
-    GetBishopMoves(position.Pieces(position.SideToMove(), PieceType::Bishop), position, allMoves, pos, enemy);
-    GetQueenMoves(position.Pieces(position.SideToMove(), PieceType::Queen), position, allMoves, pos, enemy);
-    GetKingMoves(position.Pieces(position.SideToMove(), PieceType::King), position, allMoves, pos, enemy);
-    GetRookMoves(position.Pieces(position.SideToMove(), PieceType::Rook), position, allMoves, pos, enemy);
-    GetCastleMoves(position, allMoves, pos);
+    uint64_t enemy = ~position.enemyPieces();
+    getPawnMoves<false>(position.Pieces(position.getSideToMove(), pieceType::Pawn), position, allMoves, pos, enemy);
+    getKnightMoves(position.Pieces(position.getSideToMove(), pieceType::Knight), position, allMoves, pos, enemy);
+    getBishopMoves(position.Pieces(position.getSideToMove(), pieceType::Bishop), position, allMoves, pos, enemy);
+    getQueenMoves(position.Pieces(position.getSideToMove(), pieceType::Queen), position, allMoves, pos, enemy);
+    getKingMoves(position.Pieces(position.getSideToMove(), pieceType::King), position, allMoves, pos, enemy);
+    getRookMoves(position.Pieces(position.getSideToMove(), pieceType::Rook), position, allMoves, pos, enemy);
+    getCastleMoves(position, allMoves, pos);
     }
 
 template <bool ep>
-INLINE void MoveGen::GetPawnMoves( uint64_t pawns, Position &position, Move moveList [], int &pos, uint64_t target )
+INLINE void moveGen::getPawnMoves(uint64_t pawns, Position &position, Move moveList [], int &pos, uint64_t target)
     {
     uint64_t targets;
     uint64_t epTargets;
@@ -95,31 +98,31 @@ INLINE void MoveGen::GetPawnMoves( uint64_t pawns, Position &position, Move move
 
     while (pawns != 0)
         {
-        fromIndex = BitScanForwardReset(pawns);        
-        targets = Pawn::GetAllTargets(Masks::SquareMask[fromIndex], position) & target;
+        fromIndex = bitScanForwardReset(pawns);        
+        targets = Pawn::getAllTargets(Masks::squareMask[fromIndex], position) & target;
 
         if (ep)
             {
-            if (position.EnPassantSquare() != Square::None)
+            if (position.getPassantSquare() != Square::noSquare)
                 {
-                epTargets = Moves::PawnAttacks[position.SideToMove()][fromIndex];
+                epTargets = Moves::pawnAttacks[position.getSideToMove()][fromIndex];
 
-                if ((epTargets & Masks::SquareMask[position.EnPassantSquare()]) != 0)
-                    moveList[pos++] = Move(fromIndex, position.EnPassantSquare(), EnPassant);
+                if ((epTargets & Masks::squareMask[position.getPassantSquare()]) != 0)
+                    moveList[pos++] = Move(fromIndex, position.getPassantSquare(), EnPassant);
                 }
             }
 
         while (targets != 0)
             {
-            toIndex = BitScanForwardReset(targets);        
+            toIndex = bitScanForwardReset(targets);        
 
-            if ((Square::GetRankIndex(toIndex) == 7 && position.SideToMove() == PieceColor::White)
-                || (Square::GetRankIndex(toIndex) == 0 && position.SideToMove() == PieceColor::Black))
+            if ((Square::getRankIndex(toIndex) == 7 && position.getSideToMove() == pieceColor::White)
+                || (Square::getRankIndex(toIndex) == 0 && position.getSideToMove() == pieceColor::Black))
                 {
-                moveList[pos++] = Move(fromIndex, toIndex, QueenPromotion);
-                moveList[pos++] = Move(fromIndex, toIndex, RookPromotion);
-                moveList[pos++] = Move(fromIndex, toIndex, BishopPromotion);
-                moveList[pos++] = Move(fromIndex, toIndex, KnightPromotion);
+                moveList[pos++] = Move(fromIndex, toIndex, queenPromotion);
+                moveList[pos++] = Move(fromIndex, toIndex, rookPromotion);
+                moveList[pos++] = Move(fromIndex, toIndex, bishopPromotion);
+                moveList[pos++] = Move(fromIndex, toIndex, knightPromotion);
                 }
             else
                 {
@@ -129,7 +132,7 @@ INLINE void MoveGen::GetPawnMoves( uint64_t pawns, Position &position, Move move
         }
     }
 
-INLINE void MoveGen::GetKnightMoves( uint64_t knights, Position &position, Move moveList [], int &pos, uint64_t target )
+INLINE void moveGen::getKnightMoves(uint64_t knights, Position &position, Move moveList [], int &pos, uint64_t target)
     {
     uint64_t targets;
     uint8_t fromIndex;
@@ -137,18 +140,18 @@ INLINE void MoveGen::GetKnightMoves( uint64_t knights, Position &position, Move 
 
     while (knights != 0)
         {
-        fromIndex = BitScanForwardReset(knights);        
-        targets = Knight::GetAllTargets(Masks::SquareMask[fromIndex], position) & target;
+        fromIndex = bitScanForwardReset(knights);        
+        targets = Knight::getAllTargets(Masks::squareMask[fromIndex], position) & target;
 
         while (targets != 0)
             {
-            toIndex = BitScanForwardReset(targets);        
+            toIndex = bitScanForwardReset(targets);        
             moveList[pos++] = Move(fromIndex, toIndex);
             }
         }
     }
 
-INLINE void MoveGen::GetBishopMoves( uint64_t bishops, Position &position, Move moveList [], int &pos, uint64_t target )
+INLINE void moveGen::getBishopMoves(uint64_t bishops, Position &position, Move moveList [], int &pos, uint64_t target)
     {
     uint64_t targets;
     uint8_t fromIndex;
@@ -156,18 +159,18 @@ INLINE void MoveGen::GetBishopMoves( uint64_t bishops, Position &position, Move 
 
     while (bishops != 0)
         {
-        fromIndex = BitScanForwardReset(bishops);        
-        targets = Bishop::GetAllTargets(Masks::SquareMask[fromIndex], position) & target;
+        fromIndex = bitScanForwardReset(bishops);        
+        targets = Bishop::getAllTargets(Masks::squareMask[fromIndex], position) & target;
 
         while (targets != 0)
             {
-            toIndex = BitScanForwardReset(targets);        
+            toIndex = bitScanForwardReset(targets);        
             moveList[pos++] = Move(fromIndex, toIndex);
             }
         }
     }
 
-INLINE void MoveGen::GetKingMoves( uint64_t king, Position &position, Move moveList [], int &pos, uint64_t target )
+INLINE void moveGen::getKingMoves(uint64_t king, Position &position, Move moveList [], int &pos, uint64_t target)
     {
     uint64_t targets;
     uint8_t fromIndex;
@@ -175,18 +178,18 @@ INLINE void MoveGen::GetKingMoves( uint64_t king, Position &position, Move moveL
 
     while (king != 0)
         {
-        fromIndex = BitScanForwardReset(king);        
-        targets = King::GetAllTargets(Masks::SquareMask[fromIndex], position) & target;
+        fromIndex = bitScanForwardReset(king);        
+        targets = King::getAllTargets(Masks::squareMask[fromIndex], position) & target;
 
         while (targets != 0)
             {
-            toIndex = BitScanForwardReset(targets);        
+            toIndex = bitScanForwardReset(targets);        
             moveList[pos++] = Move(fromIndex, toIndex);
             }
         }
     }
 
-INLINE void MoveGen::GetRookMoves( uint64_t rooks, Position &position, Move moveList [], int &pos, uint64_t target )
+INLINE void moveGen::getRookMoves(uint64_t rooks, Position &position, Move moveList [], int &pos, uint64_t target)
     {
     uint64_t targets;
     uint8_t fromIndex;
@@ -194,68 +197,68 @@ INLINE void MoveGen::GetRookMoves( uint64_t rooks, Position &position, Move move
 
     while (rooks != 0)
         {
-        fromIndex = BitScanForwardReset(rooks);        
-        targets = Rook::GetAllTargets(Masks::SquareMask[fromIndex], position) & target;
+        fromIndex = bitScanForwardReset(rooks);        
+        targets = Rook::getAllTargets(Masks::squareMask[fromIndex], position) & target;
 
         while (targets != 0)
             {
-            toIndex = BitScanForwardReset(targets);        
+            toIndex = bitScanForwardReset(targets);        
             moveList[pos++] = Move(fromIndex, toIndex);
             }
         }
     }
 
-INLINE void MoveGen::GetCastleMoves( Position &position, Move moveList [], int &pos )
+INLINE void moveGen::getCastleMoves(Position &position, Move moveList [], int &pos)
     {
-    if (position.SideToMove() == PieceColor::White)
+    if (position.getSideToMove() == pieceColor::White)
         {
-        if (position.CastlingStatus() & Castle::WhiteCastleOO)
+        if (position.getCastlingStatus() & Castle::whiteCastleOO)
             {
-            if ((Castle::WhiteCastleMaskOO & position.OccupiedSquares) == 0)
+            if ((Castle::whiteCastleMaskOO & position.occupiedSquares) == 0)
                 {
-                if (!position.IsAttacked(Castle::WhiteCastleMaskOO, position.SideToMove()))
-                    moveList[pos++] = Castle::WhiteCastlingOO;
+                if (!position.isAttacked(Castle::whiteCastleMaskOO, position.getSideToMove()))
+                    moveList[pos++] = Castle::whiteCastlingOO;
                 }
             }
 
-        if (position.CastlingStatus() & Castle::WhiteCastleOOO)
+        if (position.getCastlingStatus() & Castle::whiteCastleOOO)
             {
-            if ((Castle::WhiteCastleMaskOOO & position.OccupiedSquares) == 0)
+            if ((Castle::whiteCastleMaskOOO & position.occupiedSquares) == 0)
                 {
-                if (!position.IsAttacked(Castle::WhiteCastleMaskOOO ^ Masks::SquareMask[8], position.SideToMove()))
-                    moveList[pos++] = Castle::WhiteCastlingOOO;
+                if (!position.isAttacked(Castle::whiteCastleMaskOOO ^ Masks::squareMask[8], position.getSideToMove()))
+                    moveList[pos++] = Castle::whiteCastlingOOO;
                 }
             }
         }
-    else if (position.SideToMove() == PieceColor::Black)
+    else if (position.getSideToMove() == pieceColor::Black)
         {
-        if (position.CastlingStatus() & Castle::BlackCastleOO)
+        if (position.getCastlingStatus() & Castle::blackCastleOO)
             {
-            if ((Castle::BlackCastleMaskOO & position.OccupiedSquares) == 0)
+            if ((Castle::blackCastleMaskOO & position.occupiedSquares) == 0)
                 {
-                if (!position.IsAttacked(Castle::BlackCastleMaskOO, position.SideToMove()))
-                    moveList[pos++] = Castle::BlackCastlingOO;
+                if (!position.isAttacked(Castle::blackCastleMaskOO, position.getSideToMove()))
+                    moveList[pos++] = Castle::blackCastlingOO;
                 }
             }
 
-        if (position.CastlingStatus() & Castle::BlackCastleOOO)
+        if (position.getCastlingStatus() & Castle::blackCastleOOO)
             {
-            if ((Castle::BlackCastleMaskOOO & position.OccupiedSquares) == 0)
+            if ((Castle::blackCastleMaskOOO & position.occupiedSquares) == 0)
                 {
-                if (!position.IsAttacked(Castle::BlackCastleMaskOOO ^ Masks::SquareMask[15], position.SideToMove()))
-                    moveList[pos++] = Castle::BlackCastlingOOO;
+                if (!position.isAttacked(Castle::blackCastleMaskOOO ^ Masks::squareMask[15], position.getSideToMove()))
+                    moveList[pos++] = Castle::blackCastlingOOO;
                 }
             }
         }
     }
 
 template <bool onlyCaptures>
-void MoveGen::GetEvadeMoves( Position &position, uint64_t checkers, Move moveList [], int &pos )
+void moveGen::getEvadeMoves(Position &position, uint64_t checkers, Move moveList [], int &pos)
     {
     uint64_t b;
     uint8_t to;
     uint8_t from, checksq;
-    uint8_t ksq = position.KingSquare(position.SideToMove());
+    uint8_t ksq = position.getKingSquare(position.getSideToMove());
     int checkersCnt = 0;
     uint64_t sliderAttacks = 0;
 
@@ -264,30 +267,30 @@ void MoveGen::GetEvadeMoves( Position &position, uint64_t checkers, Move moveLis
     do
         {
         checkersCnt++;
-        checksq = BitScanForwardReset(b);
+        checksq = bitScanForwardReset(b);
 
-        switch( position.PieceOnSquare(checksq).Type )
+        switch(position.pieceOnSquare(checksq).Type)
             {
-            case PieceType::Bishop:
-                sliderAttacks |= Moves::PseudoBishopAttacks[checksq];
+            case pieceType::Bishop:
+                sliderAttacks |= Moves::pseudoBishopAttacks[checksq];
                 break;
 
-            case PieceType::Rook:
-                sliderAttacks |= Moves::PseudoRookAttacks[checksq];
+            case pieceType::Rook:
+                sliderAttacks |= Moves::pseudoRookAttacks[checksq];
                 break;
 
-            case PieceType::Queen:
-                if (Moves::ObstructedTable[ksq][checksq]
-                    || (Moves::PseudoBishopAttacks[checksq] & Masks::SquareMask[ksq]) == 0)
-                    sliderAttacks |= Moves::PseudoBishopAttacks[checksq] | Moves::PseudoRookAttacks[checksq];
+            case pieceType::Queen:
+                if (Moves::obstructedTable[ksq][checksq]
+                    || (Moves::pseudoBishopAttacks[checksq] & Masks::squareMask[ksq]) == 0)
+                    sliderAttacks |= Moves::pseudoBishopAttacks[checksq] | Moves::pseudoRookAttacks[checksq];
 
                 else
 
 #ifdef PEXT
-                    sliderAttacks |= Moves::PseudoBishopAttacks[checksq] | Moves::GetRookAttacks(position.OccupiedSquares, checksq);
+                    sliderAttacks |= Moves::pseudoBishopAttacks[checksq] | Moves::getRookAttacks(position.occupiedSquares, checksq);
 #else
-                sliderAttacks |= Moves::PseudoBishopAttacks[checksq] | (Moves::GetRankAttacks(position.OccupiedSquares, checksq)
-                        | Moves::GetFileAttacks(position.OccupiedSquares, checksq));
+                sliderAttacks |= Moves::pseudoBishopAttacks[checksq] | (Moves::getRankAttacks(position.occupiedSquares, checksq)
+                        | Moves::getFileAttacks(position.occupiedSquares, checksq));
 #endif
 
                 break;
@@ -295,18 +298,18 @@ void MoveGen::GetEvadeMoves( Position &position, uint64_t checkers, Move moveLis
             default:
                 break;
             }
-        } while ( b );
+        } while (b);
 
     if (onlyCaptures)
-        b = Moves::KingAttacks[ksq] & checkers;
+        b = Moves::kingAttacks[ksq] & checkers;
     else
-        b = Moves::KingAttacks[ksq] & ~position.PlayerPieces() & ~sliderAttacks;
+        b = Moves::kingAttacks[ksq] & ~position.ourPieces() & ~sliderAttacks;
 
     from = ksq;
 
     while (b)
         {
-        to = BitScanForwardReset(b);        
+        to = bitScanForwardReset(b);        
         moveList[pos++] = Move(from, to);
         }
 
@@ -318,31 +321,31 @@ void MoveGen::GetEvadeMoves( Position &position, uint64_t checkers, Move moveLis
     if (onlyCaptures)
         target = checkers;
     else
-        target = Moves::ObstructedTable[checksq][ksq] | checkers;
+        target = Moves::obstructedTable[checksq][ksq] | checkers;
 
-    GetPawnMoves<true>(position.Pieces(position.SideToMove(), PieceType::Pawn), position, moveList, pos, target);
-    GetKnightMoves(position.Pieces(position.SideToMove(), PieceType::Knight), position, moveList, pos, target);
-    GetBishopMoves(position.Pieces(position.SideToMove(), PieceType::Bishop), position, moveList, pos, target);
-    GetRookMoves(position.Pieces(position.SideToMove(), PieceType::Rook), position, moveList, pos, target);
-    GetQueenMoves(position.Pieces(position.SideToMove(), PieceType::Queen), position, moveList, pos, target);
+    getPawnMoves<true>(position.Pieces(position.getSideToMove(), pieceType::Pawn), position, moveList, pos, target);
+    getKnightMoves(position.Pieces(position.getSideToMove(), pieceType::Knight), position, moveList, pos, target);
+    getBishopMoves(position.Pieces(position.getSideToMove(), pieceType::Bishop), position, moveList, pos, target);
+    getRookMoves(position.Pieces(position.getSideToMove(), pieceType::Rook), position, moveList, pos, target);
+    getQueenMoves(position.Pieces(position.getSideToMove(), pieceType::Queen), position, moveList, pos, target);
     }
 
-INLINE void MoveGen::GetLegalMoves( Move allMoves [], int &pos, Position &position )
+INLINE void moveGen::getLegalMoves(Move allMoves [], int &pos, Position &position)
     {
-    uint64_t pinned = position.PinnedPieces();
-    uint64_t attackers = position.KingAttackers(position.KingSquare(position.SideToMove()), position.SideToMove());
+    uint64_t pinned = position.pinnedPieces();
+    uint64_t attackers = position.kingAttackers(position.getKingSquare(position.getSideToMove()), position.getSideToMove());
 
     if (attackers)
-        GetEvadeMoves<false>(position, attackers, allMoves, pos);
+        getEvadeMoves<false>(position, attackers, allMoves, pos);
     else
-        GetAllMoves(allMoves, pos, position);
+        getAllMoves(allMoves, pos, position);
 
     int last = pos;
     int cur = 0;
 
     while (cur != last)
         {
-        if (!position.IsMoveLegal(allMoves[cur], pinned))
+        if (!position.isMoveLegal(allMoves[cur], pinned))
             {
             allMoves[cur] = allMoves[--last];
             }

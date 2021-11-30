@@ -4,233 +4,204 @@
 
 namespace Piece
     {
-    uint8_t GetPiece( char initial )
+    uint8_t getPiece(char initial)
         {
-        switch( initial )
+        switch(initial)
             {
             case 'b':
-                return PieceType::Bishop;
-
+                return pieceType::Bishop;
             case 'n':
-                return PieceType::Knight;
-
+                return pieceType::Knight;
             case 'q':
-                return PieceType::Queen;
-
+                return pieceType::Queen;
             case 'r':
-                return PieceType::Rook;
-
+                return pieceType::Rook;
             default:
-                throw std::exception();  
+                throw std::exception();
             }
         }
-
-    char GetType( uint8_t type )
+    char getType(uint8_t type)
         {
-        switch( type )
+        switch(type)
             {
-            case PieceType::Bishop:
+            case pieceType::Bishop:
                 return 'b';
-
-            case PieceType::King:
+            case pieceType::King:
                 return 'k';
-
-            case PieceType::Knight:
+            case pieceType::Knight:
                 return 'n';
-
-            case PieceType::Pawn:
+            case pieceType::Pawn:
                 return 'p';
-
-            case PieceType::Queen:
+            case pieceType::Queen:
                 return 'q';
-
-            case PieceType::Rook:
+            case pieceType::Rook:
                 return 'r';
-
             default:
-                throw std::exception();  
+                throw std::exception();
+            }
+        }
+    char getColor(uint8_t color)
+        {
+        switch(color)
+            {
+            case pieceColor::White:
+                return 'w';
+            case pieceColor::Black:
+                return 'b';
+            default:
+                throw std::exception();
             }
         }
 
-	char GetColor(uint8_t color)
-	{
-		switch (color)
-		{
-		case PieceColor::White:
-			return 'w';
-
-		case PieceColor::Black:
-			return 'b';
-
-		default:
-			throw std::exception();
-		}
-	}
-
-    char GetInitial( PieceInfo piece )
+    char getInitial(pieceInfo piece)
         {
-        if (piece.Color == PieceColor::White)
+        if (piece.Color == pieceColor::White)
             {
-            switch( piece.Type )
+            switch(piece.Type)
                 {
-                case PieceType::Bishop:
+                case pieceType::Bishop:
                     return 'B';
-
-                case PieceType::King:
+                case pieceType::King:
                     return 'K';
-
-                case PieceType::Knight:
+                case pieceType::Knight:
                     return 'N';
-
-                case PieceType::Pawn:
+                case pieceType::Pawn:
                     return 'P';
-
-                case PieceType::Queen:
+                case pieceType::Queen:
                     return 'Q';
-
-                case PieceType::Rook:
+                case pieceType::Rook:
                     return 'R';
-
                 default:
-                    throw std::exception();  
+                    throw std::exception();
                 }
             }
         else
             {
-            switch( piece.Type )
+            switch(piece.Type)
                 {
-                case PieceType::Bishop:
+                case pieceType::Bishop:
                     return 'b';
-
-                case PieceType::King:
+                case pieceType::King:
                     return 'k';
-
-                case PieceType::Knight:
+                case pieceType::Knight:
                     return 'n';
-
-                case PieceType::Pawn:
+                case pieceType::Pawn:
                     return 'p';
-
-                case PieceType::Queen:
+                case pieceType::Queen:
                     return 'q';
-
-                case PieceType::Rook:
+                case pieceType::Rook:
                     return 'r';
-
                 default:
-                    throw std::exception();  
+                    throw std::exception();
                 }
             }
         }
     }
 
-PieceInfo::PieceInfo( uint8_t color, uint8_t type ) :
+pieceInfo::pieceInfo(uint8_t color, uint8_t type) :
     Color(color),
     Type(type)
     {
     }
 
-PieceInfo::PieceInfo()  noexcept :
-    Color(PieceColor::None),
-    Type(PieceType::None)
+pieceInfo::pieceInfo() noexcept :
+    Color(pieceColor::noColor),
+    Type(pieceType::noType)
     {
     }
 
-uint64_t Knight::GetAllTargets(uint64_t knights, Position &position)
-{
-	uint64_t targets = Moves::KnightAttacks[(BitScanForward(knights))];
-	return targets & ~position.PlayerPieces();
-}
+uint64_t Knight::getAllTargets(uint64_t knights, Position &position)
+    {
+    uint64_t targets = Moves::knightAttacks[(bitScanForward(knights))];
+    return targets & ~position.ourPieces();
+    }
 
-uint64_t Knight::TargetsFrom(uint8_t square, uint8_t color, Position &position)
-{
-	uint64_t targets = Moves::KnightAttacks[square];
-	return targets & ~position.Pieces(color);
-}
+uint64_t Knight::targetsFrom(uint8_t square, uint8_t color, Position &position)
+    {
+    uint64_t targets = Moves::knightAttacks[square];
+    return targets & ~position.Pieces(color);
+    }
 
-uint64_t Knight::GetKnightAttacks(uint64_t knights)
-{
-	uint64_t west, east, attacks;
-	east = Direction::OneStepEast(knights);
-	west = Direction::OneStepWest(knights);
-	attacks = (east | west) << 16;
-	attacks |= (east | west) >> 16;
-	east = Direction::OneStepEast(east);
-	west = Direction::OneStepWest(west);
-	attacks |= (east | west) << 8;
-	attacks |= (east | west) >> 8;
+uint64_t Knight::getKnightAttacks(uint64_t knights)
+    {
+    uint64_t west, east, attacks;
+    east = Direction::oneStepEast(knights);
+    west = Direction::oneStepWest(knights);
+    attacks = (east | west) << 16;
+    attacks |= (east | west) >> 16;
+    east = Direction::oneStepEast(east);
+    west = Direction::oneStepWest(west);
+    attacks |= (east | west) << 8;
+    attacks |= (east | west) >> 8;
+    return attacks;
+    }
 
-	return attacks;
-}
+uint64_t Bishop::getAllTargets(uint64_t bishops, Position &position)
+    {
+    uint64_t occupiedSquares = position.occupiedSquares;
+    uint64_t targets = Empty;
+    uint8_t square = bitScanForward(bishops);
+    targets |= Moves::getA1H8DiagonalAttacks(occupiedSquares, square);
+    targets |= Moves::getH1A8DiagonalAttacks(occupiedSquares, square);
+    return targets & ~position.ourPieces();
+    }
 
-INLINE uint64_t Bishop::GetAllTargets(uint64_t bishops, Position &position)
-{
-	uint64_t occupiedSquares = position.OccupiedSquares;
-	uint64_t targets = Empty;
-	uint8_t square = BitScanForward(bishops);
-	targets |= Moves::GetA1H8DiagonalAttacks(occupiedSquares, square);
-	targets |= Moves::GetH1A8DiagonalAttacks(occupiedSquares, square);
-	return targets & ~position.PlayerPieces();
-}
+uint64_t Bishop::targetsFrom(uint8_t square, uint8_t color, Position &position)
+    {
+    uint64_t occupiedSquares = position.occupiedSquares;
+    uint64_t targets = Empty;
+    targets |= Moves::getA1H8DiagonalAttacks(occupiedSquares, square);
+    targets |= Moves::getH1A8DiagonalAttacks(occupiedSquares, square);
+    return targets & ~position.Pieces(color);
+    }
 
-INLINE uint64_t Bishop::TargetsFrom(uint8_t square, uint8_t color, Position &position)
-{
-	uint64_t occupiedSquares = position.OccupiedSquares;
-	uint64_t targets = Empty;
-	targets |= Moves::GetA1H8DiagonalAttacks(occupiedSquares, square);
-	targets |= Moves::GetH1A8DiagonalAttacks(occupiedSquares, square);
-	return targets & ~position.Pieces(color);
-}
-
-INLINE uint64_t Rook::GetAllTargets(uint64_t rooks, Position &position)
-{
-	uint64_t occupiedSquares = position.OccupiedSquares;
-	uint64_t targets = Empty;
-	uint8_t square = BitScanForward(rooks);
-
+uint64_t Rook::getAllTargets(uint64_t rooks, Position &position)
+    {
+    uint64_t occupiedSquares = position.occupiedSquares;
+    uint64_t targets = Empty;
+    uint8_t square = bitScanForward(rooks);
 #ifdef PEXT
-	targets = Moves::GetRookAttacks(occupiedSquares, square);
+    targets = Moves::getRookAttacks(occupiedSquares, square);
 #else
-	targets |= Moves::GetRankAttacks(occupiedSquares, square);
-	targets |= Moves::GetFileAttacks(occupiedSquares, square);
+    targets |= Moves::getRankAttacks(occupiedSquares, square);
+    targets |= Moves::getFileAttacks(occupiedSquares, square);
 #endif
-	return targets & ~position.PlayerPieces();
-}
+    return targets & ~position.ourPieces();
+    }
 
-INLINE uint64_t Rook::TargetsFrom(uint8_t square, uint8_t color, Position &position)
-{
-	uint64_t occupiedSquares = position.OccupiedSquares;
-	uint64_t targets = Empty;
-
+INLINE uint64_t Rook::targetsFrom(uint8_t square, uint8_t color, Position &position)
+    {
+    uint64_t occupiedSquares = position.occupiedSquares;
+    uint64_t targets = Empty;
 #ifdef PEXT
-	targets = Moves::GetRookAttacks(occupiedSquares, square);
+    targets = Moves::getRookAttacks(occupiedSquares, square);
 #else
-	targets |= Moves::GetRankAttacks(occupiedSquares, square);
-	targets |= Moves::GetFileAttacks(occupiedSquares, square);
+    targets |= Moves::getRankAttacks(occupiedSquares, square);
+    targets |= Moves::getFileAttacks(occupiedSquares, square);
 #endif
-	return targets & ~position.Pieces(color);
-}
+    return targets & ~position.Pieces(color);
+    }
 
-uint64_t Queen::GetAllTargets(uint64_t queens, Position &position)
-{
-	return Rook::GetAllTargets(queens, position) | Bishop::GetAllTargets(queens, position);
-}
+uint64_t Queen::getAllTargets(uint64_t queens, Position &position)
+    {
+    return Rook::getAllTargets(queens, position) | Bishop::getAllTargets(queens, position);
+    }
 
-uint64_t Queen::TargetsFrom(uint8_t square, uint8_t color, Position &position)
-{
-	return Rook::TargetsFrom(square, color, position) | Bishop::TargetsFrom(square, color, position);
-}
+uint64_t Queen::targetsFrom(uint8_t square, uint8_t color, Position &position)
+    {
+    return Rook::targetsFrom(square, color, position) | Bishop::targetsFrom(square, color, position);
+    }
 
-uint64_t King::GetAllTargets(uint64_t king, Position &position)
-{
-	uint64_t kingMoves = Moves::KingAttacks[(BitScanForward(king))];
-	return kingMoves & ~position.PlayerPieces();
-}
+uint64_t King::getAllTargets(uint64_t king, Position &position)
+    {
+    uint64_t kingMoves = Moves::kingAttacks[(bitScanForward(king))];
+    return kingMoves & ~position.ourPieces();
+    }
 
-uint64_t King::GetKingAttacks(uint64_t king)
-{
-	uint64_t attacks = Direction::OneStepEast(king) | Direction::OneStepWest(king);
-	king |= attacks;
-	attacks |= Direction::OneStepNorth(king) | Direction::OneStepSouth(king);
-	return attacks;
-}
+uint64_t King::getKingAttacks(uint64_t king)
+    {
+    uint64_t attacks = Direction::oneStepEast(king) | Direction::oneStepWest(king);
+    king |= attacks;
+    attacks |= Direction::oneStepNorth(king) | Direction::oneStepSouth(king);
+    return attacks;
+    }

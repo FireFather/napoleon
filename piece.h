@@ -1,31 +1,32 @@
 #pragma once
+#include "defines.h"
 #include <string>
 
-class PieceInfo
-    {
-    public:
+class pieceInfo
+	{
+public:
 
-    uint8_t Color;
-    uint8_t Type;
-    PieceInfo(uint8_t, uint8_t);
-    PieceInfo() noexcept;
-    };
+	uint8_t Color;
+	uint8_t Type;
+	pieceInfo(uint8_t, uint8_t);
+	pieceInfo() noexcept;
+	};
 
 namespace Piece
     {
-    uint8_t GetPiece(char);
-    char GetType(uint8_t);
-	char GetColor(uint8_t);
-    char GetInitial(PieceInfo);
-    uint8_t GetOpposite(uint8_t);
+    uint8_t getPiece(char);
+    char getType(uint8_t);
+    char getColor(uint8_t);
+    char getInitial(pieceInfo);
+    uint8_t getOpposite(uint8_t);
     }
 
-inline uint8_t Piece::GetOpposite( uint8_t color )
+INLINE uint8_t Piece::getOpposite(uint8_t color)
     {
     return uint8_t(1 ^ color);
     }
 
-enum PieceType :
+enum pieceType :
     uint8_t
     {
     Pawn,
@@ -34,50 +35,51 @@ enum PieceType :
     Rook,
     Queen,
     King,
-    None
+    noType
     };
 
-namespace PieceColor
-    {
-    const uint8_t White = 0;
-    const uint8_t Black = 1;
-    const uint8_t None = 2;
-    }
+enum pieceColor :
+	uint8_t
+	{
+	White,
+	Black,
+	noColor
+	};
 
 class Position;
 
 class Knight
-{
-public:
-	static uint64_t GetAllTargets(uint64_t, Position &);
-	static uint64_t GetKnightAttacks(uint64_t);
-	static uint64_t TargetsFrom(uint8_t, uint8_t, Position &);
-};
+    {
+    public:
+    static uint64_t getAllTargets(uint64_t, Position &);
+    static uint64_t getKnightAttacks(uint64_t);
+    static uint64_t targetsFrom(uint8_t, uint8_t, Position &);
+    };
 
 class Bishop
-{
-public:
-	static uint64_t GetAllTargets(uint64_t, Position &);
-	static uint64_t TargetsFrom(uint8_t, uint8_t, Position &);
-};
+    {
+    public:
+    static uint64_t getAllTargets(uint64_t, Position &);
+    static uint64_t targetsFrom(uint8_t, uint8_t, Position &);
+    };
 
 class Rook
-{
-public:
-	static uint64_t GetAllTargets(uint64_t, Position &);
-	static uint64_t TargetsFrom(uint8_t, uint8_t, Position &);
-};
+    {
+    public:
+    static uint64_t getAllTargets(uint64_t, Position &);
+    static uint64_t targetsFrom(uint8_t, uint8_t, Position &);
+    };
 
 class Queen
-{
-public:
-	static uint64_t GetAllTargets(uint64_t, Position &);
-	static uint64_t TargetsFrom(uint8_t, uint8_t, Position &);
-};
+    {
+    public:
+    static uint64_t getAllTargets(uint64_t, Position &);
+    static uint64_t targetsFrom(uint8_t, uint8_t, Position &);
+    };
 
 class King
-{
-public:
-	static uint64_t GetAllTargets(uint64_t, Position &);
-	static uint64_t GetKingAttacks(uint64_t);
-};
+    {
+    public:
+    static uint64_t getAllTargets(uint64_t, Position &);
+    static uint64_t getKingAttacks(uint64_t);
+    };

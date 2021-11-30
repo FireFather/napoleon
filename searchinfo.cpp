@@ -1,32 +1,32 @@
 #include "searchinfo.h"
 
-SearchInfo::SearchInfo( int time, int depth, int nodes )  noexcept :
+SearchInfo::SearchInfo(int time, int depth, int nodes)  noexcept :
     depth(depth),
     nodes(nodes)
     {
     SelDepth = 0;
     allocatedTime = time;
-    SetDepthLimit(100);
+    setDepthLimit(100);
     }
 
-int SearchInfo::IncrementDepth()
+int SearchInfo::incrementDepth()
     {
     return depth++;
     }
 
-int SearchInfo::MaxDepth()
+int SearchInfo::maxDepth()
     {
     return depth;
     }
 
-void SearchInfo::SetDepthLimit( int depth )
+void SearchInfo::setDepthLimit(int depth)
     {
     depthLimit = depth;
     }
 
-void SearchInfo::NewSearch( int time )
+void SearchInfo::newSearch(int time)
     {
-    ResetNodes();
+    resetNodes();
     allocatedTime = time;
     depth = 1;
     std::memset(history, 0, sizeof(history));
@@ -34,17 +34,17 @@ void SearchInfo::NewSearch( int time )
     timer.Restart();
     }
 
-void SearchInfo::StopSearch()
+void SearchInfo::stopSearch()
     {
-    SetDepthLimit(100);
+    setDepthLimit(100);
     }
 
-void SearchInfo::ResetNodes()
+void SearchInfo::resetNodes()
     {
     nodes = 0;
     }
 
-void SearchInfo::SetGameTime( int time )
+void SearchInfo::setGameTime(int time)
     {
     allocatedTime = time;
     timer.Restart();

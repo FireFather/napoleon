@@ -10,17 +10,12 @@ void Clock::Restart()
     begin = t_clock::now();
     }
 
-double Clock::ElapsedMilliseconds()
+double Clock::elapsedMilliseconds()
     {
     return double(duration_cast<MS>(t_clock::now() - begin).count());
     }
 
-double Clock::ElapsedSeconds()
-    {
-    return double(duration_cast<std::chrono::seconds>(t_clock::now() - begin).count());
-    }
-
-Clock Clock::StartNew()
+Clock Clock::startNow()
     {
     Clock watch;
     watch.Restart();

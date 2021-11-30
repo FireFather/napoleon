@@ -5,7 +5,7 @@ class SMPInfo
     {
     public:
 
-    void UpdateInfo( int depth, int alpha, int beta, const Position &position, bool ready )
+    void updateInfo(int depth, int alpha, int beta, const Position &position, bool ready)
         {
         this->beta = beta;
         this->depth = depth;
@@ -39,7 +39,7 @@ class SMPInfo
         return readyToSearch;
         }
 
-    void SetReady( bool ready )
+    void setReady(bool ready)
         {
         readyToSearch = ready;
         }
