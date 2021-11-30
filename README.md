@@ -1,12 +1,13 @@
 # napoleon
  
-chess engine based on Napoleon by crybot (Marco Pampaloni)
+chess engine Napoleon by crybot (Marco Pampaloni)
 
 https://github.com/crybot/Napoleon/
 
 source code cleaned up, simplified, and improved
-much stronger (+100 Elo) than the original
+boost libraries dependency eliminated
+significant strength improvement
 
 I've included the Visual Studio project files
 
-Norman Schmidt firefather@telenet.be 6/26/2017
+Norman Schmidt firefather@telenet.be
