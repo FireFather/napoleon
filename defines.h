@@ -5,7 +5,7 @@
 using namespace std;
 typedef std::pair<int, int> Score;
 
-//#define PEXT
+#define PEXT
 
 #pragma warning(disable : 6326) //Potential comparison of a constant with another constant
 #pragma warning(disable : 6386) //Buffer overrun while writing to 'this->kingSquare'

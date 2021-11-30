@@ -1,0 +1,25 @@
+﻿  benchmark.cpp
+  position.cpp
+  eval.cpp
+  fen.cpp
+  hashentry.cpp
+  main.cpp
+  math.cpp
+  move.cpp
+  moves.cpp
+  movegen.cpp
+  movepick.cpp
+  pawn.cpp
+  piece.cpp
+  search.cpp
+  searchinfo.cpp
+  clock.cpp
+  hashtable.cpp
+  square.cpp
+  uci.cpp
+  zobrist.cpp
+  Generating code
+  Previous IPDB not found, fall back to full compilation.
+  All 1293 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  napoleon.vcxproj -> C:\engine_dev\napoleon\x64\Release\napoleon.exe
