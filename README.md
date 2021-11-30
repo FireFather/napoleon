@@ -1,6 +1,6 @@
-# napoleon
+# napoleon 2.0
  
-chess engine Napoleon by crybot (Marco Pampaloni)
+chess engine Napoleon by crybot (Marco Pampaloni), updated and improved
 
 ![alt tag](https://raw.githubusercontent.com/FireFather/napoleon/master/napoleon.bmp)
 ![alt tag](https://raw.githubusercontent.com/FireFather/napoleon/master/napoleonpp.bmp)
